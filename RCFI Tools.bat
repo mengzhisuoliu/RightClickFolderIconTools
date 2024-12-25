@@ -11,13 +11,17 @@
 :: 2024-12-04 Added: Config option to specify the "Collections" folder and the initial directory for the file selection dialog.
 :: 2024-12-04 Added: Config option to specify the template to use for images from the "Collections" folder (including its subfolders).
 :: 2024-12-04 Improved: Logic to skip the "TemplateAlwaysAsk" dialog when conditions for "TemplateFor" are met.
-:: 2024-12-05 Improved: Removed unused lines, reorganized code, and optimized performance (possibly introduced a few bugs 😅).
-:: 2024-12-05 Improved: Right-clicking 'Change Folder Icon' now opens the file selection dialog.
-:: 2024-12-06 Modified: Updated default settings to TemplateAlwaysAsk="Yes", TemplateIconSize="Auto", and HideAsSystemFiles="Yes".
+:: 2024-12-05 Improved: Removed unused lines, reorganized code, and optimized performance (possibly creating some bugs too 😅).
+:: 2024-12-05 Improved: Right-click 'Change Folder Icon' now opens the file selection dialog.
+:: 2024-12-06 Modified: Changed the default settings to TemplateIconSize="Auto", HideAsSystemFiles="Yes"
 :: 2024-12-07 Fixed: Convert.exe failing to generate icons when using the 'generate' feature.
 :: 2024-12-09 Fixed: Unable to open 'Global Template Configuration' from the Template Configurations menu.
 :: 2024-12-10 Fixed: Some folder names not displaying correctly during icon generation.
 :: 2024-12-18 Added: New template — "DualTab Vertical" (Requested in #17).
+:: 2024-12-24 Added: Option to customize the folder name on some templates.
+:: 2024-12-24 Rolled back: SingleInstanceAccumulator from v1.0.0.5 to v0.0.0.0, so users don't need to download and install Microsoft .NET 8.0.  
+:: 2024-12-25 Optimized: the logic for opening File selector.
+
 
 setlocal
 set name=RCFI Tools
@@ -293,8 +297,8 @@ if /i "%Command%"=="cd.."		PUSHD    .. &echo %TAB% Changing to the parent direct
 if /i "%Command%"==".."			PUSHD    .. &echo %TAB% Changing to the parent directory. &goto options
 if /i "%Command%"=="RCFI"		echo %TAB%%_% Opening..   &echo %TAB%%ESC%%I_%%~dp0%ESC% &echo. &explorer.exe "%~dp0" &goto options
 if /i "%Command%"=="open"		echo %TAB%%_% Opening..   &echo %TAB%%ESC%%I_%%~dp0%ESC% &echo. &explorer.exe "%~dp0" &goto options
-if /i "%Command%"=="o"			set "InitDir=Default"&set "FS-referer=cmd"&goto FI-File_Selector
-if /i "%Command%"=="c"			set "initDir=Collect"&set "referer=cmd"&goto FI-File_Selector
+if /i "%Command%"=="o"			set "initDir=default"&set "FS-referer=cmd"&goto FI-File_Selector
+if /i "%Command%"=="c"			set "initDir=collect"&set "FS-referer=cmd"&goto FI-File_Selector
 if /i "%Command%"=="cls"			cls&goto options
 if /i "%Command%"=="r"			start "" "%~f0" &exit
 if /i "%Command%"=="tc"			goto Colour
@@ -348,10 +352,10 @@ if /i "%Context%"=="DefKey"						goto FI-Keyword
 if /i "%Context%"=="Move"							set "cdonly=true"&goto FI-Move
 if /i "%Context%"=="Rename"						set "cdonly=true"&goto FI-Rename
 if /i "%Context%"=="GenKey"						set "input=Generate"&set "cdonly=true"&goto FI-Generate
-if /i "%Context%"=="GenJPG"						set "input=Generate"&set "Keywords=.jpg"&call :VarUpdate&set "cdonly=true"&goto FI-Generate
-if /i "%Context%"=="GenPNG"						set "input=Generate"&set "Keywords=.png"&call :VarUpdate&set "cdonly=true"&goto FI-Generate
-if /i "%Context%"=="GenPosterJPG"				set "input=Generate"&set "Keywords=Poster.jpg"	&call :VarUpdate&set "cdonly=true"&goto FI-Generate
-if /i "%Context%"=="GenLandscapeJPG"			set "input=Generate"&set "Keywords=Landscape.jpg"&call :VarUpdate&set "cdonly=true"&goto FI-Generate
+if /i "%Context%"=="GenJPG"						set "input=Generate"&set "OldKeywords=%Keywords%"&set "Keywords=.jpg"&call :VarUpdate&set "cdonly=true"&goto FI-Generate
+if /i "%Context%"=="GenPNG"						set "input=Generate"&set "OldKeywords=%Keywords%"&set "Keywords=.png"&call :VarUpdate&set "cdonly=true"&goto FI-Generate
+if /i "%Context%"=="GenPosterJPG"				set "input=Generate"&set "OldKeywords=%Keywords%"&set "Keywords=Poster.jpg"	&call :VarUpdate&set "cdonly=true"&goto FI-Generate
+if /i "%Context%"=="GenLandscapeJPG"			set "input=Generate"&set "OldKeywords=%Keywords%"&set "Keywords=Landscape.jpg"&call :VarUpdate&set "cdonly=true"&goto FI-Generate
 if /i "%Context%"=="ActivateFolderIcon"		set "cdonly=true"&goto FI-Activate-Ask
 if /i "%Context%"=="DeactivateFolderIcon"		set "cdonly=true"&goto FI-Deactivate
 if /i "%Context%"=="RemFolderIcon"				set "delete=confirm"&set "cdonly=true"		&goto FI-Remove
@@ -360,9 +364,9 @@ if /i "%Context%"=="DIRBG.Choose.Template"		set "refer=Choose.Template"		&goto F
 if /i "%Context%"=="Scan.Here"					%Dir% &set "input=Scan" 			&goto FI-Scan
 if /i "%Context%"=="DefKey.Here"				%DIR% &goto FI-Keyword
 if /i "%Context%"=="GenKey.Here"				%Dir% &set "input=Generate"		&set "cdonly=false" 		&goto FI-Generate
-if /i "%Context%"=="GenJPG.Here"				%Dir% &set "input=Generate"		&set "Keywords=.jpg"&call :VarUpdate&set "cdonly=false" &goto FI-Generate
-if /i "%Context%"=="GenPNG.Here"				%Dir% &set "input=Generate"		&set "Keywords=.png"&call :VarUpdate&set "cdonly=false" &goto FI-Generate
-if /i "%Context%"=="GenPosterJPG.Here"			%Dir% &set "input=Generate"		&set "Keywords=Poster.jpg"&call :VarUpdate&set "cdonly=false" &goto FI-Generate
+if /i "%Context%"=="GenJPG.Here"				%Dir% &set "input=Generate"		&set "OldKeywords=%Keywords%"&set "Keywords=.jpg"&call :VarUpdate&set "cdonly=false" &goto FI-Generate
+if /i "%Context%"=="GenPNG.Here"				%Dir% &set "input=Generate"		&set "OldKeywords=%Keywords%"&set "Keywords=.png"&call :VarUpdate&set "cdonly=false" &goto FI-Generate
+if /i "%Context%"=="GenPosterJPG.Here"			%Dir% &set "input=Generate"		&set "OldKeywords=%Keywords%"&set "Keywords=Poster.jpg"&call :VarUpdate&set "cdonly=false" &goto FI-Generate
 if /i "%Context%"=="Move.Here"					%Dir% &goto FI-Move
 if /i "%Context%"=="Rename.Here"					%Dir% &goto FI-Rename
 if /i "%Context%"=="GenLandscapeJPG.Here"		%Dir% &set "input=Generate"		&set "Keywords=Landscape.jpg"&call :VarUpdate&set "cdonly=false" &goto FI-Generate
@@ -479,8 +483,11 @@ call :FI-Generate-Folder_Icon
 goto options
 
 :FI-File_Selector
-if /i "%FileSelectorPath%"=="%CollectionsFolder%" set "FileSelectorPath=D:\"
-if not exist "%FileSelectorPath%" set "FileSelectorPath=D:\"
+set "FolderCount="
+if defined xSelected for %%S in (%xSelected%) do PUSHD "%%~fS"&set /a FolderCount+=1
+set "FileSelectorPathBackup=%FileSelectorPath%"
+if not exist "%FileSelectorPath%" set "FileSelectorPath=%cd%"
+if %FolderCount% EQU 1 set "FileSelectorPath=%cd%"&set "FS-BackToBackup=yes"
 
 if exist "%FileSelector-defaultPath%" (
 	set "FileSelector-InitialPath=%FileSelector-defaultPath%"
@@ -488,32 +495,33 @@ if exist "%FileSelector-defaultPath%" (
 	set "FileSelector-InitialPath=%FileSelectorPath%"
 )
 
-if /i "%InitDir%"=="Collect" (
+if /i "%InitDir%"=="collect" (
 	set "initialDirectory=%CollectionsFolder%"
 ) else (
 	set "initialDirectory=%FileSelector-InitialPath%"
 )
 
-set "SelectorSelectedFile=%RCFI%\resources\selected_file.txt"
+set "SaveSelectedFile=%RCFI%\resources\selected_file.txt"
 for /f "tokens=1-12 delims=," %%A in ("%ImageSupport%") do (
     set fileFilter=*%%A;*%%B;*%%C;*%%D;*%%E;*%%F;*%%G;*%%H;*%%I;*%%J;*%%K;*%%L
 )
 set "fileFilter=Image Files (*.jpg, *.png, *.ico, ...)|%fileFilter%"
 set "OpenFileSelector=Add-Type -AssemblyName System.Windows.Forms; $f = New-Object System.Windows.Forms.OpenFileDialog; $f.InitialDirectory = '%initialDirectory%'; $fileDialog.RestoreDirectory = $true; $f.Filter = '%fileFilter%'; $f.ShowDialog() | Out-Null; $f.FileName; exit"
-if /i "%FS-Trigger%"=="Context" (
-	echo.&echo.&echo.&echo.&echo.&echo.&echo.&echo.&echo.&echo.
-	echo                     %I_%%G_%     Select a file from the file selection dialog     %_%
-	set "FS-Trigger="
+if /i not "%FS-referer%"=="cmd" (
+echo.&echo.&echo.&echo.&echo.&echo.&echo.&echo.&echo.&echo.
+echo                     %I_%%G_%     Select a file from the file selection dialog     %_%
 )
 start /MIN /WAIT "" "%RCFI%\resources\File_Selector.bat"
 
-if exist "%SelectorSelectedFile%" (
-    for /f "usebackq tokens=* delims=" %%F in ("%SelectorSelectedFile%") do (
+if exist "%SaveSelectedFile%" (
+    for /f "usebackq tokens=* delims=" %%F in ("%SaveSelectedFile%") do (
         set "SelectorSelectedFile=%%~fF"
         set "FileSelectorPath=%%~dpF"
     )
-    del /q "%SelectorSelectedFile%" >nul
+    del /q "%SaveSelectedFile%" >nul
 )
+if /i "%SelectorSelectedFile%"==" " echo %TAB%  %I_%%G_%  No file selected  %_%&echo.&echo.
+if /i "%FS-BackToBackup%"=="yes" set "FileSelectorPath=%FileSelectorPathBackup%"&set "FS-BackToBackup="
 if exist "%FileSelectorPath%" if /i not "%FileSelectorPath%"=="%CollectionsFolder%\" call :Config-Save
 if not exist "%SelectorSelectedFile%" set "SelectorSelectedFile="
 
@@ -592,8 +600,8 @@ if not exist "%input%" (
 )
 set "Input=%Input:"=%"
 if /i "%input%"=="1" goto FI-Selected_folder-Separate
-if /i "%input%"=="o" set "FS-referer=Choose.from.collections"&goto FI-File_Selector
-if /i "%input%"=="c" set "initialDirectory=%CollectionsFolder%"&set "FS-referer=Change.Folder.Icon"&goto FI-File_Selector
+if /i "%input%"=="o" cls&set "context=Select.And.Change.Folder.Icon"&goto Input-Context
+if /i "%input%"=="c" cls&set "context=Choose.from.collections"&goto Input-Context
 echo.
 if not exist "%Input%" (
 	echo.
@@ -2942,7 +2950,6 @@ EXIT
 
 :FI-Updater
 for /l %%N in (1,1,1) do (
-	%P2%
 	for /f "usebackq tokens=* delims=" %%F in ("%RCFI%\resources\FolderUpdater_list.txt") do (
 		call "%FI-Update%" /f %%F >nul 2>&1 &call |EXIT /B
 	)
@@ -3612,15 +3619,19 @@ if not exist "%FileSelector-defaultPath%" (
 	set "FileSelector-defaultPath=Specify the drive path for the initial directory when opening the file selector."
 )
 
-if /i "%FileSelectorPath%"=="%CollectionsFolder%" set "FileSelectorPath=%FileSelectorPathBackup%"
+call set "FileSelectorPathIsCollections=%%FileSelectorPath:%CollectionsFolder%=%%"
+if /i not "%FileSelectorPathIsCollections%"=="%FileSelectorPath%" set "FileSelectorPath=%FileSelectorPathBackup%"
 
 if not defined TemplateIconSize set "TemplateIconSize=Auto"
+rem prevent current keywords replaced by intstant keywords.
+set "SavedKeywords=%Keywords%"
+if defined OldKeywords set "SavedKeywords=%OldKeywords%"
 
 (
 	echo     𝐑𝐂𝐅𝐈 𝐓𝐎𝐎𝐋𝐒 𝐂𝐎𝐍𝐅𝐈𝐆𝐔𝐑𝐀𝐓𝐈𝐎𝐍
 	echo.
 	echo ---------  KEYWORD  --------------
-	echo Keywords="%Keywords%"
+	echo Keywords="%SavedKeywords%"
 	echo ----------------------------------
 	echo.
 	echo.
@@ -3811,7 +3822,7 @@ PUSHD "%~dp0"
     echo TemplateForPNG="Specify the template name for .png files"
     echo TemplateForJPG="Specify the template name for .jpg files"
     echo TemplateForCollections="(none)"
-    echo TemplateAlwaysAsk="Yes"
+    echo TemplateAlwaysAsk="No"
     echo TemplateTestMode="No"
     echo TemplateTestMode-AutoExecute="Yes"
     echo TemplateIconSize="Auto"
@@ -3837,6 +3848,7 @@ PUSHD "%~dp0"
     echo - Options with no value ^(empty/blank^) will be ignored.
     echo.
     echo.
+    echo set "custom-FolderName="
     echo set "display-FolderName="
     echo set "use-Logo-instead-of-FolderName="
     echo set "FolderNameShort-characters-limit="
@@ -3893,7 +3905,7 @@ REM installing -> create "uninstall.bat"
 if /i "%setup_select%"=="1" (
 	echo PUSHD    "%%~dp0">"%RCFID%"
 	echo set "Setup=Deactivate" ^&call "%name%" ^|^|pause^>nul :%version:v0.=%>>"%RCFID%"
-	del /q "%RCFI%\#𝐏𝐀𝐒𝐒𝐖𝐎𝐑𝐃 𝟏𝟐𝟑𝟒" 2>nul
+	del /q "%RCFI%\#𝐏𝐀𝐒𝐒𝐖𝐎𝐑𝐃 𝐈𝐒 𝟏𝟐𝟑𝟒" 2>nul
 	echo %W_%%name% %version%  %CC_%Activated%_%
 	echo %G_%Folder Icon Tools has been added to the right-click menus. %_%
 	if not defined input (goto intro)

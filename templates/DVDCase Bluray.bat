@@ -33,14 +33,14 @@ call :LAYER-BASE
 call :LAYER-RATING
 call :LAYER-GENRE
  "%Converter%"        ^
-  %CODE-BACKGROUND%   ^
-  %CODE-POSTER-IMAGE% ^
-  %CODE-FRAME-IMAGE%  ^
-  %CODE-THE-SHADOW%   ^
-  %CODE-STAR-IMAGE%   ^
-  %CODE-RATING%       ^
-  %CODE-GENRE%        ^
-  %CODE-ICON-SIZE%    ^
+  %LAYER-BACKGROUND%   ^
+  %LAYER-POSTER-IMAGE% ^
+  %LAYER-FRAME-IMAGE%  ^
+  %LAYER-THE-SHADOW%   ^
+  %LAYER-STAR-IMAGE%   ^
+  %LAYER-RATING%       ^
+  %LAYER-GENRE%        ^
+  %LAYER-ICON-SIZE%    ^
  "%OutputFile%"
 endlocal
 exit /b
@@ -57,25 +57,25 @@ if /i "%use-GlobalConfig%"=="Yes" (
 )
 
 :: Get background image
-set CODE-BACKGROUND= ( "%canvas%" ^
+set LAYER-BACKGROUND= ( "%canvas%" ^
 	-scale 512x512! ^
 	-background none ^
 	-extent 512x512 ^
 	) -compose Over
 
-set CODE-POSTER-IMAGE= ( "%inputfile%" ^
+set LAYER-POSTER-IMAGE= ( "%inputfile%" ^
 	 -scale 340x438! ^
 	 -background none ^
 	 -gravity Northwest ^
 	 -geometry +78+48 ^
 	 ) -compose Over -composite
 
-set CODE-FRAME-IMAGE= ( "%frame-image%" ^
+set LAYER-FRAME-IMAGE= ( "%frame-image%" ^
 	 -resize 512x512! ^
 	 ) -compose Over -composite
 
-set CODE-THE-SHADOW= ( +clone -background BLACK -shadow 0x2+2+2.5 ) +swap -background none -layers merge -extent 512x512
-set CODE-ICON-SIZE=-define icon:auto-resize="%TemplateIconSize%"
+set LAYER-THE-SHADOW= ( +clone -background BLACK -shadow 0x2+2+2.5 ) +swap -background none -layers merge -extent 512x512
+set LAYER-ICON-SIZE=-define icon:auto-resize="%TemplateIconSize%"
 exit /b
 	 
 :LAYER-RATING
@@ -83,7 +83,7 @@ if /i not "%display-movieinfo%" EQU "yes" exit /b
 if not exist "*.nfo" (exit /b) else call "%RCFI%\resources\extract-NFO.bat"
 if /i not "%Show-Rating%" EQU "yes" exit /b
 
-set CODE-STAR-IMAGE= ( ^
+set LAYER-STAR-IMAGE= ( ^
 	 "%star-image%" ^
 	 -scale 88x88! ^
 	 -gravity Northwest ^
@@ -93,7 +93,7 @@ set CODE-STAR-IMAGE= ( ^
 	 ) -compose Over -composite
 	if not defined rating exit /b
 	
-set CODE-RATING= ( ^
+set LAYER-RATING= ( ^
 	 -font "%rcfi%\resources\ANGIE-BOLD.TTF" ^
 	 -fill rgba(0,0,0,0.9) ^
 	 -density 400 ^
@@ -113,7 +113,7 @@ if /i not "%display-movieinfo%" EQU "yes" exit /b
 if /i not "%Show-Genre%" EQU "yes" exit /b
 if not defined genre exit /b
 
-set CODE-GENRE= ( ^
+set LAYER-GENRE= ( ^
 	 -font "%rcfi%\resources\ANGIE-BOLD.TTF" ^
 	 -fill BLACK ^
 	 -density 400 ^

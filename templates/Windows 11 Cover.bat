@@ -1,5 +1,6 @@
-:: Template-Version=v1.2
-:: 2024-06-27 Add error handling: "LabelExpected ' @ error/annotate.c/GetMultilineTypeMetrics/804." 
+:: Template-Version=v1.3
+:: 2024-06-27 Added: Error handling for "LabelExpected ' @ error/annotate.c/GetMultilineTypeMetrics/804."
+:: 2024-12-23 Added: Option to customize folder names.
 
 
 ::                Template Info
@@ -10,7 +11,8 @@
 
 ::                Template Config
 ::========================================================
-set "use-GlobalConfig=Yes"
+set "use-GlobalConfig=yes"
+set "custom-FolderName=no"
 
 ::--------- Movie Info ---------------------
 set "display-movieinfo=yes"
@@ -28,7 +30,7 @@ set "display-FolderName=yes"
 set "FolderName-Center=Auto"
     :: options: Auto = Automatically put folder name on the center if numbers 
     ::                 of the characters is less than half of characters limit
-    ::          Yes  = Always put folder name on the center
+    ::          yes  = Always put folder name on the center
     ::          No   = Always put folder name on the left
 
 	set "FolderNameShort-characters-limit=8"
@@ -51,6 +53,7 @@ set "FolderName-Center=Auto"
 	set "FolderNameLong-Pos-Gravity=NorthWest"
 	set "FolderNameLong-Pos-X=+0"
 	set "FolderNameLong-Pos-Y=+83"
+set "FolderName-Font-Color=rgba(255,255,255,0.9)"
 
 ::--------- Picture Config -----------------
 set "Picture-Opacity=100%"
@@ -87,16 +90,16 @@ call :LAYER-LOGO
 call :LAYER-CLEARART
 call :LAYER-FOLDER_NAME
  "%Converter%"             ^
-  %CODE-BACKGROUND%        ^
-  %CODE-FOLDER-NAME-SHORT% ^
-  %CODE-FOLDER-NAME-LONG%  ^
-  %CODE-LOGO-IMAGE%        ^
-  %CODE-CLEARART-IMAGE%    ^
-  %CODE-PICTURE%           ^
-  %CODE-STAR-IMAGE%        ^
-  %CODE-RATING%            ^
-  %CODE-GENRE%             ^
-  %CODE-ICON-SIZE%         ^
+  %LAYER-BACKGROUND%        ^
+  %LAYER-FOLDER-NAME-SHORT% ^
+  %LAYER-FOLDER-NAME-LONG%  ^
+  %LAYER-LOGO-IMAGE%        ^
+  %LAYER-CLEARART-IMAGE%    ^
+  %LAYER-PICTURE%           ^
+  %LAYER-STAR-IMAGE%        ^
+  %LAYER-RATING%            ^
+  %LAYER-GENRE%             ^
+  %LAYER-ICON-SIZE%         ^
  "%OutputFile%"
   %deltemp%
 endlocal
@@ -107,13 +110,22 @@ exit /b
 :::::::::::::::::::::::::::   CODE START   :::::::::::::::::::::::::::::::::
 
 :LAYER-BASE
-if /i "%use-GlobalConfig%"=="Yes" (
+if /i "%use-GlobalConfig%"=="yes" (
 	for /f "usebackq tokens=1,2 delims==" %%A in ("%RCFI.templates.ini%") do (
 		if /i not "%%B"=="" if /i not %%B EQU ^" %%A=%%B
 	)
 )
 
-set CODE-BACKGROUND= ( ^
+set "cfn1=%RCFI%\resources\custom_foldername.txt"
+if /i "%custom-FolderName%"=="yes" (
+	start /WAIT "" "%RCFI%\resources\custom_foldername.bat"
+	if exist "%cfn1%" (
+		for /f "usebackq tokens=* delims=" %%C in ("%cfn1%") do %%C
+		del /q "%cfn1%"
+	)
+)
+
+set LAYER-BACKGROUND= ( ^
 	"%canvas%" ^
 	-scale      512x512! ^
 	-background  none ^
@@ -150,7 +162,7 @@ set "Win11CoverMask=Win11CoverMask(%FI-ID%).png"
 set /a "PicOp=255*%Picture-Opacity%/100"
 set "Picture-Opacity=-alpha set -channel A -evaluate set %PicOp% +channel"
 
-set CODE-PICTURE=	( ^
+set LAYER-PICTURE=	( ^
 	 "%Win11Cover-BG%" ^
 	 -scale 512x512! ^
 	 -modulate %Picture-Drawing-Exposure%,%Picture-Drawing-Saturation% ^
@@ -158,7 +170,7 @@ set CODE-PICTURE=	( ^
 	 -blur 0x%Picture-Drawing-Smoothness% ^
 	 %Picture-Opacity% "%Win11CoverMask%" ) -compose Over  -composite 
 	  
-set CODE-ICON-SIZE=-define icon:auto-resize="%TemplateIconSize%"
+set LAYER-ICON-SIZE=-define icon:auto-resize="%TemplateIconSize%"
 
 set deltemp=del "Win11CoverMask(%FI-ID%).png" "Win11CoverLogoMask(%FI-ID%).png" 2>nul
 exit /b
@@ -168,7 +180,7 @@ if /i not "%display-movieinfo%" EQU "yes" exit /b
 if not exist "*.nfo" (exit /b) else call "%RCFI%\resources\extract-NFO.bat"
 if /i not "%Show-Rating%" EQU "yes" exit /b
 
-set CODE-STAR-IMAGE= ( ^
+set LAYER-STAR-IMAGE= ( ^
 	 "%star-image%" ^
 	 -scale 88x88! ^
 	 -gravity Northwest ^
@@ -179,7 +191,7 @@ set CODE-STAR-IMAGE= ( ^
 	 ) -compose Over -composite
 if not defined rating exit /b
 
-set CODE-RATING= ( ^
+set LAYER-RATING= ( ^
 	 -font "%rcfi%\resources\ANGIE-BOLD.TTF" ^
 	 -fill rgba(0,0,0,0.9) ^
 	 -density 400 ^
@@ -200,7 +212,7 @@ if /i not "%display-movieinfo%" EQU "yes" exit /b
 if /i not "%Show-Genre%" EQU "yes" exit /b
 if not defined genre exit /b
 
-set CODE-GENRE= ( ^
+set LAYER-GENRE= ( ^
 	 -font "%rcfi%\resources\ANGIE-BOLD.TTF" ^
 	 -fill BLACK ^
 	 -density 400 ^
@@ -220,7 +232,7 @@ exit /b
 :LAYER-LOGO
 if /i not "%use-Logo-instead-folderName%"=="yes" exit /b
 
-if exist "*logo.png" (
+if /i not "%custom-FolderName-HaveTheLogo%"=="yes" if exist "*logo.png" (
 	for %%D in (*logo.png) do set "Logo=%%~fD"&set "LogoName=%%~nxD"
 ) else exit /b
 
@@ -244,7 +256,7 @@ set "Win11CoverLogoMask=Win11CoverLogoMask(%FI-ID%).png"
 	 -geometry -138-150 ^
 	) -compose over -composite "%Win11CoverLogoMask%"
 	
-set CODE-LOGO-IMAGE= ( ^
+set LAYER-LOGO-IMAGE= ( ^
 	 "%Win11Cover-BG%" ^
 	 -scale 512x512! ^
 	 -modulate 60,120 -brightness-contrast -5x30 -blur 0x1 ^
@@ -260,7 +272,7 @@ if exist "*clearart.png" (
 
 echo %TAB%%ESC%%g_%Clear Art   :%ClearArtName%%ESC%
 
-set CODE-CLEARART-IMAGE= ( "%clearart%" ^
+set LAYER-CLEARART-IMAGE= ( "%clearart%" ^
 	 -trim +repage ^
 	 -scale 230x125^ ^
 	 -background none ^
@@ -272,9 +284,9 @@ exit /b
 
 :LAYER-FOLDER_NAME
 if /i not "%display-FolderName%"=="yes" exit /b
-if defined CODE-LOGO-IMAGE exit /b
+if defined LAYER-LOGO-IMAGE exit /b
 
-for %%F in ("%cd%") do set "foldername=%%~nxF"
+if /i not "%custom-FolderName%"=="yes" for %%F in ("%cd%") do set "foldername=%%~nxF"
 if not defined foldername set "foldername=%cd:\=\\            %"&set "FolderNameLong-characters-limit=0"
 
 set "FolNamShort=%foldername%"
@@ -309,10 +321,10 @@ if not "%_FolNamLong%"=="%FolderName%" (
 set /A "FolNamLongLimiter=%FolNamLongLimit%-4"
 if %FolNamLongCount% GTR %FolNamLongLimit% call set "FolNamLong=%%FolderName:~0,%FolNamLongLimiter%%%..."
 
-set CODE-FOLDER-NAME-SHORT= ^
+set LAYER-FOLDER-NAME-SHORT= ^
 	( ^
 	 -font "%FolderNameShort-font%" ^
-	 -fill rgba(255,255,255,0.85) ^
+	 -fill %FolderName-Font-Color% ^
 	 -density 400 ^
 	 -pointsize %FolderNameShort-size% ^
 	 %FolNamPos% ^
@@ -326,10 +338,10 @@ set CODE-FOLDER-NAME-SHORT= ^
 
 if %FolNamShortCount% LEQ %FolNamShortLimit% exit /b
 
-set CODE-FOLDER-NAME-LONG= ^
+set LAYER-FOLDER-NAME-LONG= ^
 	 ( ^
 	 -font "%FolderNameLong-font%" ^
-	 -fill rgba(255,255,255,0.9) ^
+	 -fill %FolderName-Font-Color% ^
 	 -density 400 ^
 	 -pointsize %FolderNameLong-size% ^
 	 -kerning -0.5 ^
@@ -342,7 +354,7 @@ set CODE-FOLDER-NAME-LONG= ^
 	 ( +clone -background BLACK -shadow 3x4.5+0.2-0.2 ) +swap -background none -layers merge ^
 	 ) -composite
 	 
-if "%FolderNameLong-characters-limit%"=="0" set "CODE-FOLDER-NAME-LONG="
+if "%FolderNameLong-characters-limit%"=="0" set "LAYER-FOLDER-NAME-LONG="
 exit /b
 
 :::::::::::::::::::::::::::   CODE END   ::::::::::::::::::::::::::::::::::

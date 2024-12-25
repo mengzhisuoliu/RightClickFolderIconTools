@@ -1,20 +1,23 @@
-:: Template-Version=v1.3
-:: 2024-06-22 Fixed The star image was rendered in the generated folder icon even when the “.nfo” file didn’t exist.
-:: 2024-06-24 Added Global Config to override template config using RCFI.template.ini.
-:: 2024-09-30 Relocated "NFO-file extractor" script to /resources/extract-NFO.bat.
-:: 2024-09-30 Added option to choose the preferred rating available inside the .nfo file.
+:: Template-Version = v1.4
+:: 2024-06-22 Fixed: Star image rendering even without an ".nfo" file.
+:: 2024-06-24 Added: Global Config to override template settings via RCFI.template.ini.
+:: 2024-09-30 Relocated: "NFO-file extractor" script to /resources/extract-NFO.bat.
+:: 2024-09-30 Added: Option to choose the preferred rating from the .nfo file.
+:: 2024-12-23 Added: Option to customize the folder name.
 
 
 ::                Template Info
 ::========================================================
-::`  Template style by Jonathan Brimer
+::`  PSD Template by Jonathan Brimer
 ::`  https://beoriginal.com/blog/free-folder-icon-photoshop-template
+::`  Convert and Edit using ImageMagick.
 ::` ------------------------------------------------------
 
 
 ::                Template Config
 ::========================================================
-set "use-GlobalConfig=Yes"
+set "use-GlobalConfig=yes"
+set "custom-FolderName=no"
 
 ::--------- Label --------------------------
 set "display-FolderName=yes"
@@ -23,6 +26,7 @@ set "FolderNameShort-font=Arial-Bold"
 set "FolderNameLong-characters-limit=38"
 set "FolderNameLong-font=Arial"
 set "FolderName-Center=Auto"
+set "FolderName-Font-Color=rgba(255,255,255,0.9)"
 
 ::--------- Movie Info ---------------------
 set "display-movieinfo=yes"
@@ -65,17 +69,17 @@ call :LAYER-LOGO
 call :LAYER-CLEARART
 call :LAYER-FOLDER_NAME
  "%Converter%"             ^
-  %CODE-BACKGROUND%        ^
-  %CODE-BACK%              ^
-  %CODE-FOLDER-NAME-SHORT% ^
-  %CODE-FOLDER-NAME-LONG%  ^
-  %CODE-LOGO-IMAGE%        ^
-  %CODE-CLEARART-IMAGE%    ^
-  %CODE-FRONT%             ^
-  %CODE-STAR-IMAGE%        ^
-  %CODE-RATING%            ^
-  %CODE-GENRE%             ^
-  %CODE-ICON-SIZE%         ^
+  %LAYER-BACKGROUND%        ^
+  %LAYER-BACK%              ^
+  %LAYER-FOLDER-NAME-SHORT% ^
+  %LAYER-FOLDER-NAME-LONG%  ^
+  %LAYER-LOGO-IMAGE%        ^
+  %LAYER-CLEARART-IMAGE%    ^
+  %LAYER-FRONT%             ^
+  %LAYER-STAR-IMAGE%        ^
+  %LAYER-RATING%            ^
+  %LAYER-GENRE%             ^
+  %LAYER-ICON-SIZE%         ^
  "%OutputFile%"
 endlocal
 exit /b
@@ -85,13 +89,22 @@ exit /b
 :::::::::::::::::::::::::::   CODE START   :::::::::::::::::::::::::::::::::
 
 :LAYER-BASE
-if /i "%use-GlobalConfig%"=="Yes" (
+if /i "%use-GlobalConfig%"=="yes" (
 	for /f "usebackq tokens=1,2 delims==" %%A in ("%RCFI.templates.ini%") do (
 		if /i not "%%B"=="" if /i not %%B EQU ^" %%A=%%B
 	)
 )
 
-set CODE-BACKGROUND= ( "%canvas%" ^
+set "cfn1=%RCFI%\resources\custom_foldername.txt"
+if /i "%custom-FolderName%"=="yes" (
+	start /WAIT "" "%RCFI%\resources\custom_foldername.bat"
+	if exist "%cfn1%" (
+		for /f "usebackq tokens=* delims=" %%C in ("%cfn1%") do %%C
+		del /q "%cfn1%"
+	)
+)
+
+set LAYER-BACKGROUND= ( "%canvas%" ^
 	-scale 512x512! ^
 	-background none ^
 	-extent 512x512 ^
@@ -100,7 +113,7 @@ set CODE-BACKGROUND= ( "%canvas%" ^
 set /a "PicOp=255*%Picture-Opacity%/100"
 set "Picture-Opacity=-alpha set -channel A -evaluate set %PicOp% +channel"
 
-set CODE-FRONT= ( ^
+set LAYER-FRONT= ( ^
 	 "%inputfile%" ^
 	 -scale 480x318! ^
 	 -gravity Northwest ^
@@ -108,9 +121,9 @@ set CODE-FRONT= ( ^
 	 %Picture-Opacity% "%BeOriginal-Front%" )   -compose over -composite ^
 	 ( "%BeOriginal-FrontFx%" -scale 512x512! ) -compose over -composite
 	 
-if /i "%Background-AmbientColor%"=="0" set CODE-BACK= ( "%inputfile%" -scale 512x512! ) -compose over -composite
+if /i "%Background-AmbientColor%"=="0" set LAYER-BACK= ( "%inputfile%" -scale 512x512! ) -compose over -composite
 
-if /i not "%Background-AmbientColor%"=="0" set CODE-BACK= ( ^
+if /i not "%Background-AmbientColor%"=="0" set LAYER-BACK= ( ^
 	 "%inputfile%" ^
 	 -modulate 100x%Background-Saturation% ^
 	 -modulate %Background-Exposure%x100 ^
@@ -127,7 +140,7 @@ if /i not "%Background-AmbientColor%"=="0" set CODE-BACK= ( ^
 	 "%BeOriginal-Back%" ) -compose over -composite ^
 	 ( "%BeOriginal-BackFx%" -scale 512x512! ) -compose over -composite
 	 
-set CODE-ICON-SIZE=-define icon:auto-resize="%TemplateIconSize%"
+set LAYER-ICON-SIZE=-define icon:auto-resize="%TemplateIconSize%"
 exit /b
 
 :LAYER-RATING
@@ -135,7 +148,7 @@ if /i not "%display-movieinfo%" EQU "yes" exit /b
 if not exist "*.nfo" (exit /b) else call "%RCFI%\resources\extract-NFO.bat"
 if /i not "%Show-Rating%" EQU "yes" exit /b
 
-set CODE-STAR-IMAGE= ( ^
+set LAYER-STAR-IMAGE= ( ^
 	 "%star-image%" ^
 	 -scale 88x88! ^
 	 -gravity Northwest ^
@@ -146,7 +159,7 @@ set CODE-STAR-IMAGE= ( ^
 	 ) -compose Over -composite
 if not defined rating exit /b
 
-set CODE-RATING= ( ^
+set LAYER-RATING= ( ^
 	 -font "%rcfi%\resources\ANGIE-BOLD.TTF" ^
 	 -fill rgba(0,0,0,0.9) ^
 	 -density 400 ^
@@ -167,7 +180,7 @@ if /i not "%display-movieinfo%" EQU "yes" exit /b
 if /i not "%Show-Genre%" EQU "yes" exit /b
 if not defined genre exit /b
 
-set CODE-GENRE= ( ^
+set LAYER-GENRE= ( ^
 	 -font "%rcfi%\resources\ANGIE-BOLD.TTF" ^
 	 -fill BLACK ^
 	 -density 400 ^
@@ -187,13 +200,13 @@ exit /b
 :LAYER-LOGO
 if /i not "%use-Logo-instead-folderName%"=="yes" exit /b
 
-if exist "*logo.png" (
+if /i not "%custom-FolderName-HaveTheLogo%"=="yes" if exist "*logo.png" (
 	for %%D in (*logo.png) do set "Logo=%%~fD"&set "LogoName=%%~nxD"
 ) else exit /b
 
 echo %TAB%%ESC%%g_%Logo        :%LogoName%%ESC%
 
-set CODE-LOGO-IMAGE= ( "%Logo%" ^
+set LAYER-LOGO-IMAGE= ( "%Logo%" ^
 	 -trim +repage ^
 	 -scale 145x45^ ^
 	 -background none ^
@@ -211,7 +224,7 @@ if exist "*clearart.png" (
 
 echo %TAB%%ESC%%g_%Clear Art   :%ClearArtName%%ESC%
 
-set CODE-CLEARART-IMAGE= ( "%clearart%" ^
+set LAYER-CLEARART-IMAGE= ( "%clearart%" ^
 	 -trim +repage ^
 	 -scale 295x123^ ^
 	 -background none ^
@@ -222,11 +235,10 @@ exit /b
 
 
 :LAYER-FOLDER_NAME
-if not defined FolderName exit /b
 if /i not "%display-FolderName%"=="yes" exit /b
-if defined CODE-LOGO-IMAGE exit /b
+if defined LAYER-LOGO-IMAGE exit /b
 
-for %%F in ("%cd%") do set "foldername=%%~nxF"
+if /i not "%custom-FolderName%"=="yes" for %%F in ("%cd%") do set "foldername=%%~nxF"
 if not defined foldername set "foldername=%cd:\=\\            %"&set "FolderNameLong-characters-limit=0"
 
 set "FolNamShort=%foldername%"
@@ -261,10 +273,10 @@ if not "%_FolNamLong%"=="%FolderName%" (
 set /A "FolNamLongLimiter=%FolNamLongLimit%-4"
 if %FolNamLongCount% GTR %FolNamLongLimit% call set "FolNamLong=%%FolderName:~0,%FolNamLongLimiter%%%..."
 
-set CODE-FOLDER-NAME-SHORT= ^
+set LAYER-FOLDER-NAME-SHORT= ^
 	( ^
 	 -font "%FolderNameShort-font%" ^
-	 -fill rgba(255,255,255,0.9) ^
+	 -fill %FolderName-Font-Color% ^
 	 -density 400 ^
 	 -pointsize 4.5 ^
 	 %FolNamPos% ^
@@ -278,10 +290,10 @@ set CODE-FOLDER-NAME-SHORT= ^
 
 if %FolNamShortCount% LEQ %FolNamShortLimit% exit /b
 
-set CODE-FOLDER-NAME-LONG= ^
+set LAYER-FOLDER-NAME-LONG= ^
 	 ( ^
 	 -font "%FolderNameLong-font%" ^
-	 -fill rgba(255,255,255,0.9) ^
+	 -fill %FolderName-Font-Color% ^
 	 -density 400 ^
 	 -pointsize 2.5 ^
 	 -kerning 2 ^
@@ -294,7 +306,7 @@ set CODE-FOLDER-NAME-LONG= ^
 	 ( +clone -background BLACK -shadow 10x5+0.2-0.2 ) +swap -background none -layers merge ^
 	 ) -composite
 
-if "%FolderNameLong-characters-limit%"=="0" set "CODE-FOLDER-NAME-LONG="
+if "%FolderNameLong-characters-limit%"=="0" set "LAYER-FOLDER-NAME-LONG="
 exit /b
 
 :::::::::::::::::::::::::::   CODE END   ::::::::::::::::::::::::::::::::::

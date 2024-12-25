@@ -1,10 +1,10 @@
-:: Template-Version=v1.2
-:: 2024-06-22 Fix: The star image was rendered in the generated folder icon even when the “.nfo” file didn’t exist.
-:: 2024-06-24 Added "Global Config" to override template config using 'RCFI.template.ini'.
-:: 2024-10-20 Removed "Picture-opacity" option because it caused transparency to render as black. 
-::            (Might fix and add it back later if anyone needs it?)
-:: 2024-10-20 Added config "Picture-Drawing=original" to display the picture as is.
-:: 2024-10-20 Added config to change the shadow.
+:: Template-Version=v1.3
+:: 2024-06-22 Fixed: Star image rendering in folder icon even without an ".nfo" file.
+:: 2024-06-24 Added: "Global Config" to override template settings via 'RCFI.template.ini'.
+:: 2024-10-20 Removed: "Picture-opacity" option to prevent black rendering on transparency.
+:: 2024-10-20 Added: "Picture-Drawing=original" to display images without modification.
+:: 2024-10-20 Added: Config option to adjust shadow settings.
+:: 2024-12-23 Added: Option to customize folder names.
 
 
 ::                Template Info
@@ -16,7 +16,8 @@
 
 ::                Template Config
 ::========================================================
-set "use-GlobalConfig=Yes"
+set "use-GlobalConfig=yes"
+set "custom-FolderName=no"
 
 ::--------- Movie Info ---------------------
 set "display-movieinfo=yes"
@@ -34,7 +35,7 @@ set "display-FolderName=yes"
 set "FolderName-Center=Auto"
     :: options: Auto = Automatically put folder name on the center if numbers 
     ::                 of the characters is less than half of characters limit
-    ::          Yes  = Always put folder name on the center
+    ::          yes  = Always put folder name on the center
     ::          No   = Always put folder name on the left
 
 	set "FolderNameShort-characters-limit=7"
@@ -57,6 +58,7 @@ set "FolderName-Center=Auto"
 	set "FolderNameLong-Pos-Gravity=SouthWest"
 	set "FolderNameLong-Pos-X=+3"
 	set "FolderNameLong-Pos-Y=+333"
+set "FolderName-Font-Color=rgba(255,255,255,0.9)"
 
 ::--------- Picture Config -----------------
 set "Picture-Drawing=yes"
@@ -65,13 +67,13 @@ set "Picture-Drawing=yes"
    ::               no  = convert everything to black, except for transparency.
    
 set "Picture-TrimTransparentSpace=yes"
-set "Picture-Width=400"
-set "Picture-Height=230"
+set "Picture-Width=340"
+set "Picture-Height=190"
 set "Picture-Gravity=center"
 set "Picture-Position-X=-0"
-set "Picture-Position-Y=+20"
+set "Picture-Position-Y=+25"
 
-	::--------- if "Picture Drawing=YES"
+	::--------- if "Picture Drawing=yes"
 	  set "Picture-Drawing-ON-Brightness=-8"
 	  set "Picture-Drawing-ON-Contrast=40"
 	  set "Picture-Drawing-ON-Exposure=55"
@@ -110,17 +112,17 @@ call :LAYER-LOGO
 call :LAYER-CLEARART
 call :LAYER-FOLDER_NAME
  "%Converter%"             ^
-  %CODE-BACKGROUND%        ^
-  %CODE-FOLDERIFY%         ^
-  %CODE-FOLDER-NAME-SHORT% ^
-  %CODE-FOLDER-NAME-LONG%  ^
-  %CODE-LOGO-IMAGE%        ^
-  %CODE-CLEARART-IMAGE%    ^
-  %CODE-PICTURE%           ^
-  %CODE-STAR-IMAGE%        ^
-  %CODE-RATING%            ^
-  %CODE-GENRE%             ^
-  %CODE-ICON-SIZE%         ^
+  %LAYER-BACKGROUND%        ^
+  %LAYER-FOLDERIFY%         ^
+  %LAYER-FOLDER-NAME-SHORT% ^
+  %LAYER-FOLDER-NAME-LONG%  ^
+  %LAYER-LOGO-IMAGE%        ^
+  %LAYER-CLEARART-IMAGE%    ^
+  %LAYER-PICTURE%           ^
+  %LAYER-STAR-IMAGE%        ^
+  %LAYER-RATING%            ^
+  %LAYER-GENRE%             ^
+  %LAYER-ICON-SIZE%         ^
  "%OutputFile%"
   %deltemp%
 endlocal
@@ -131,13 +133,22 @@ exit /b
 :::::::::::::::::::::::::::   CODE START   :::::::::::::::::::::::::::::::::
 
 :LAYER-BASE
-if /i "%use-GlobalConfig%"=="Yes" (
+if /i "%use-GlobalConfig%"=="yes" (
 	for /f "usebackq tokens=1,2 delims==" %%A in ("%RCFI.templates.ini%") do (
 		if /i not "%%B"=="" if /i not %%B EQU ^" %%A=%%B
 	)
 )
 
-set CODE-BACKGROUND= ( "%canvas%" ^
+set "cfn1=%RCFI%\resources\custom_foldername.txt"
+if /i "%custom-FolderName%"=="yes" (
+	start /WAIT "" "%RCFI%\resources\custom_foldername.bat"
+	if exist "%cfn1%" (
+		for /f "usebackq tokens=* delims=" %%C in ("%cfn1%") do %%C
+		del /q "%cfn1%"
+	)
+)
+
+set LAYER-BACKGROUND= ( "%canvas%" ^
 	-scale 512x512! ^
 	-background none ^
 	-extent 512x512 ^
@@ -158,7 +169,7 @@ rem need to fix "Picture-Transparency" option, cant render "Picture-Drawing".
 rem set /a "PicOp=255*%Picture-Transparency%/100"
 rem set "Picture-Transparency=-alpha set -channel RGB -evaluate set %PicOp% +channel"
 
-set CODE-FOLDERIFY= ( "%Win11Folderify-BG%" %ReAdjust-Position% ) -compose over -composite
+set LAYER-FOLDERIFY= ( "%Win11Folderify-BG%" %ReAdjust-Position% ) -compose over -composite
 
 if /i "%Picture-TrimTransparentSpace%"=="yes"	(set "TrimPNG=-trim +repage") else (set "TrimPNG=")
 
@@ -195,13 +206,13 @@ if /i not "%Picture-Drawing%"=="original" "%Converter%" ( "%canvas%" ^
 	 %Picture-Shadow-Code% ^
 	) -compose over -composite "%Win11FolderifyMask%"
 	 
-set CODE-PICTURE=	( ^
+set LAYER-PICTURE=	( ^
 	"%Win11Folderify-BG%" %ReAdjust-Position% ^
 	-scale 512x512! ^
 	%PictureIntensity% ^
 	"%Win11FolderifyMask%" ) -compose Over  -composite
 
-if /i "%Picture-Drawing%"=="original" set CODE-PICTURE= ( ^
+if /i "%Picture-Drawing%"=="original" set LAYER-PICTURE= ( ^
 	"%InputFile%" ^
 	-scale %Picture-Width%x%Picture-Height%^ ^
 	-gravity %Picture-Gravity% ^
@@ -209,7 +220,7 @@ if /i "%Picture-Drawing%"=="original" set CODE-PICTURE= ( ^
 	%Picture-Shadow-Code% ^
 	) -compose Over -composite
 
-set CODE-ICON-SIZE=-define icon:auto-resize="%TemplateIconSize%"
+set LAYER-ICON-SIZE=-define icon:auto-resize="%TemplateIconSize%"
 
 if /i not "%Picture-Drawing%"=="original" set deltemp=del "Win11FolderifyMask(%FI-ID%).png" "Win11FolderifyLogoMask(%FI-ID%).png" >nul
 exit /b
@@ -219,7 +230,7 @@ if /i not "%display-movieinfo%" EQU "yes" exit /b
 if not exist "*.nfo" (exit /b) else call "%RCFI%\resources\extract-NFO.bat"
 if /i not "%Show-Rating%" EQU "yes" exit /b
 
-set CODE-STAR-IMAGE= ( ^
+set LAYER-STAR-IMAGE= ( ^
 	 "%star-image%" ^
 	 -scale 88x88! ^
 	 -gravity Northwest ^
@@ -230,7 +241,7 @@ set CODE-STAR-IMAGE= ( ^
 	 ) -compose Over -composite
 if not defined rating exit /b
 
-set CODE-RATING= ( ^
+set LAYER-RATING= ( ^
 	 -font "%rcfi%\resources\ANGIE-BOLD.TTF" ^
 	 -fill rgba(0,0,0,0.9) ^
 	 -density 400 ^
@@ -251,7 +262,7 @@ if /i not "%display-movieinfo%" EQU "yes" exit /b
 if /i not "%Show-Genre%" EQU "yes" exit /b
 if not defined genre exit /b
 
-set CODE-GENRE= ( ^
+set LAYER-GENRE= ( ^
 	 -font "%rcfi%\resources\ANGIE-BOLD.TTF" ^
 	 -fill BLACK ^
 	 -density 400 ^
@@ -271,7 +282,7 @@ exit /b
 :LAYER-LOGO
 if /i not "%use-Logo-instead-folderName%"=="yes" exit /b
 
-if exist "*logo.png" (
+if /i not "%custom-FolderName-HaveTheLogo%"=="yes" if exist "*logo.png" (
 	for %%D in (*logo.png) do set "Logo=%%~fD"&set "LogoName=%%~nxD"
 ) else exit /b
 
@@ -295,7 +306,7 @@ set "Win11FolderifyLogoMask=Win11FolderifyLogoMask(%FI-ID%).png"
 	 -geometry -134-150 ^
 	) -compose over -composite "%Win11FolderifyLogoMask%"
 	
-set CODE-LOGO-IMAGE= ( ^
+set LAYER-LOGO-IMAGE= ( ^
 	 "%Win11Folderify-BG%" %ReAdjust-Position% ^
 	 -scale 512x512! ^
 	 -modulate 60,120 -brightness-contrast -5x30 -blur 0x1 ^
@@ -311,7 +322,7 @@ if exist "*clearart.png" (
 
 echo %TAB%%ESC%%g_%Clear Art   :%ClearArtName%%ESC%
 
-set CODE-CLEARART-IMAGE= ( "%clearart%" ^
+set LAYER-CLEARART-IMAGE= ( "%clearart%" ^
 	 -trim +repage ^
 	 -scale 230x125^ ^
 	 -background none ^
@@ -323,9 +334,9 @@ exit /b
 
 :LAYER-FOLDER_NAME
 if /i not "%display-FolderName%"=="yes" exit /b
-if defined CODE-LOGO-IMAGE exit /b
+if defined LAYER-LOGO-IMAGE exit /b
 
-for %%F in ("%cd%") do set "foldername=%%~nxF"
+if /i not "%custom-FolderName%"=="yes" for %%F in ("%cd%") do set "foldername=%%~nxF"
 if not defined foldername set "foldername=%cd:\=\\            %"&set "FolderNameLong-characters-limit=0"
 
 set "FolNamShort=%foldername%"
@@ -360,10 +371,10 @@ if not "%_FolNamLong%"=="%FolderName%" (
 set /A "FolNamLongLimiter=%FolNamLongLimit%-4"
 if %FolNamLongCount% GTR %FolNamLongLimit% call set "FolNamLong=%%FolderName:~0,%FolNamLongLimiter%%%..."
 
-set CODE-FOLDER-NAME-SHORT= ^
+set LAYER-FOLDER-NAME-SHORT= ^
 	( ^
 	 -font "%FolderNameShort-font%" ^
-	 -fill rgba(255,255,255,0.85) ^
+	 -fill %FolderName-Font-Color% ^
 	 -density 400 ^
 	 -pointsize %FolderNameShort-size% ^
 	 %FolNamPos% ^
@@ -377,10 +388,10 @@ set CODE-FOLDER-NAME-SHORT= ^
 
 if %FolNamShortCount% LEQ %FolNamShortLimit% exit /b
 
-set CODE-FOLDER-NAME-LONG= ^
+set LAYER-FOLDER-NAME-LONG= ^
 	 ( ^
 	 -font "%FolderNameLong-font%" ^
-	 -fill rgba(255,255,255,0.9) ^
+	 -fill %FolderName-Font-Color% ^
 	 -density 400 ^
 	 -pointsize %FolderNameLong-size% ^
 	 -kerning -0.5 ^
@@ -393,7 +404,7 @@ set CODE-FOLDER-NAME-LONG= ^
 	 ( +clone -background BLACK -shadow 3x4.5+0.2-0.2 ) +swap -background none -layers merge ^
 	 ) -composite
 
-if "%FolderNameLong-characters-limit%"=="0" set "CODE-FOLDER-NAME-LONG="
+if "%FolderNameLong-characters-limit%"=="0" set "LAYER-FOLDER-NAME-LONG="
 exit /b
 
 :::::::::::::::::::::::::::   CODE END   ::::::::::::::::::::::::::::::::::

@@ -1,6 +1,4 @@
-:: Template-Version=v1.2
-:: 2024-06-22 Fix: The star image was rendered in the generated folder icon even when the “.nfo” file didn’t exist.
-:: 2024-06-24 Adding Global Config to override template config using RCFI.template.ini.
+:: Template-Version=v1.0
 
 ::                Template Info
 ::========================================================
@@ -11,7 +9,7 @@
 
 ::                Template Config
 ::========================================================
-set "use-GlobalConfig=Yes"
+set "use-GlobalConfig=yes"
 set "custom-FolderName=yes"
  
 ::--------- Label --------------------------
@@ -19,6 +17,7 @@ set "display-FolderName=yes"
 set "FolderNameShort-characters-limit=10"
 set "FolderNameLong-characters-limit=38"
 set "FolderName-Center=Auto"
+set "FolderName-Font-Color=rgba(255,255,255,0.9)"
 
 ::--------- Movie Info ---------------------
 set "display-movieinfo=yes"
@@ -29,7 +28,7 @@ set "genre-characters-limit=26"
 
 ::--------- Additional Art -----------------
 set "use-Logo-instead-FolderName=yes"
-set "display-clearArt=yes"
+set "display-clearArt=no"
 ::========================================================
 
 
@@ -55,29 +54,29 @@ call :LAYER-CLEARART
 call :LAYER-FOLDER_NAME
 
  "%Converter%"              ^
-  %CODE-BACKGROUND%         ^
-  %CODE-TAB2%               ^
-  %CODE-TAB2-LABEL%         ^
-  %CODE-TAB2-LOGO%          ^
-  %CODE-TAB2-FX%            ^
-  %CODE-TAB1%               ^
-  %CODE-TAB1-FX%            ^
-  %CODE-LOGO-IMAGE%         ^
-  %CODE-FOLDER-NAME-SHORT%  ^
-  %CODE-FOLDER-NAME-LONG%   ^
-  %CODE-POSTER-MAIN%        ^
-  %CODE-CLEARART-IMAGE%     ^
-  %CODE-STAR-IMAGE%         ^
-  %CODE-RATING%             ^
-  %CODE-GENRE%              ^
-  %CODE-ICON-SIZE%          ^
+  %LAYER-BACKGROUND%         ^
+  %LAYER-TAB2%               ^
+  %LAYER-TAB2-LABEL%         ^
+  %LAYER-TAB2-LOGO%          ^
+  %LAYER-TAB2-FX%            ^
+  %LAYER-TAB1%               ^
+  %LAYER-TAB1-FX%            ^
+  %LAYER-LOGO-IMAGE%         ^
+  %LAYER-FOLDER-NAME-SHORT%  ^
+  %LAYER-FOLDER-NAME-LONG%   ^
+  %LAYER-POSTER-MAIN%        ^
+  %LAYER-CLEARART-IMAGE%     ^
+  %LAYER-STAR-IMAGE%         ^
+  %LAYER-RATING%             ^
+  %LAYER-GENRE%              ^
+  %LAYER-ICON-SIZE%          ^
  "%OutputFile%"
 
  "%Converter%"              ^
-  %CODE-BACKGROUND%         ^
-  %CODE-DROPSHADOW%         ^
+  %LAYER-BACKGROUND%         ^
+  %LAYER-DROPSHADOW%         ^
   ( "%OutputFile%" -scale 512x512! ) -compose over -composite ^
-  %CODE-ICON-SIZE%          ^
+  %LAYER-ICON-SIZE%          ^
  "%OutputFile%"
 endlocal
 exit /b
@@ -88,17 +87,17 @@ exit /b
 
 
 :LAYER-BASE
-if /i "%use-GlobalConfig%"=="Yes" (
+if /i "%use-GlobalConfig%"=="yes" (
 	for /f "usebackq tokens=1,2 delims==" %%A in ("%RCFI.templates.ini%") do (
 		if /i not "%%B"=="" if /i not %%B EQU ^" %%A=%%B
 	)
 )
 
 rem variable couldn't pass the 3rd call/start. (?)
-set "multi-FolderName=Yes"
+set "multi-FolderName=yes"
 set "cfn1=%RCFI%\resources\custom_foldername.txt"
 set "cfn2=%RCFI%\resources\custom_foldername2.txt"
-if /i "%custom-FolderName%"=="Yes" (
+if /i "%custom-FolderName%"=="yes" (
 	start /WAIT "" "%RCFI%\resources\custom_foldername.bat"
 	if exist "%cfn1%" (
 		for /f "usebackq tokens=* delims=" %%C in ("%cfn1%") do %%C
@@ -111,13 +110,13 @@ if /i "%custom-FolderName%"=="Yes" (
 	)
 )
 
-set CODE-BACKGROUND= ( ^
+set LAYER-BACKGROUND= ( ^
 	"%canvas%" ^
 	-scale 512x512! ^
 	-background none ^
 	-extent 512x512 ) -compose Over
 
-set CODE-POSTER-MAIN= ( ^
+set LAYER-POSTER-MAIN= ( ^
 	 "%inputfile%" ^
 	 -scale 372x482! ^
 	 -brightness-contrast 5x15 ^
@@ -127,7 +126,7 @@ set CODE-POSTER-MAIN= ( ^
 	 "%DualTabV-front%" ) -compose over -composite ^
 	 ( "%DualTabV-frontfx%" -scale 512x512! ) -compose over -composite
 
-set CODE-TAB1= ( ^
+set LAYER-TAB1= ( ^
 	 "%inputfile%" ^
 	 -resize 3x3! ^
 	 -resize 1000x1000! ^
@@ -136,10 +135,10 @@ set CODE-TAB1= ( ^
 	 -brightness-contrast 15x30 ^
 	 -blur 0x50 ^
 	 "%DualTabV-tab1%" ) -compose over -composite
-set CODE-TAB1-FX= ( "%DualTabV-tab1fx%" -scale 512x512! ) -compose over -composite
+set LAYER-TAB1-FX= ( "%DualTabV-tab1fx%" -scale 512x512! ) -compose over -composite
   
-set CODE-DROPSHADOW=( "%DualTabV-shadow%" -scale 512x512! ) -compose over -composite
-set CODE-ICON-SIZE=-define icon:auto-resize="%TemplateIconSize%"
+set LAYER-DROPSHADOW=( "%DualTabV-shadow%" -scale 512x512! ) -compose over -composite
+set LAYER-ICON-SIZE=-define icon:auto-resize="%TemplateIconSize%"
 exit /b
  
 :LAYER-RATING
@@ -147,7 +146,7 @@ if /i not "%display-movieinfo%" EQU "yes" exit /b
 if not exist "*.nfo" (exit /b) else call "%RCFI%\resources\extract-NFO.bat"
 if /i not "%Show-Rating%" EQU "yes" exit /b
 
-set CODE-STAR-IMAGE= ( ^
+set LAYER-STAR-IMAGE= ( ^
 	 "%star-image%" ^
 	 -scale 88x84! ^
 	 -gravity Northwest ^
@@ -157,7 +156,7 @@ set CODE-STAR-IMAGE= ( ^
 	 ) -compose Over -composite
 	 if not defined rating exit /b
 
-set CODE-RATING= ( ^
+set LAYER-RATING= ( ^
 	 -font "%rcfi%\resources\ANGIE-BOLD.TTF" ^
 	 -fill rgba(0,0,0,0.9) ^
 	 -density 400 ^
@@ -179,7 +178,7 @@ if /i not "%display-movieinfo%" EQU "yes" exit /b
 if /i not "%Show-Genre%" EQU "yes" exit /b
 if not defined GENRE exit /b
 
-set CODE-GENRE= ( ^
+set LAYER-GENRE= ( ^
 	 -font "%rcfi%\resources\ANGIE-BOLD.TTF" ^
 	 -fill BLACK ^
 	 -density 400 ^
@@ -205,7 +204,7 @@ if /i not "%custom-FolderName-HaveTheLogo%"=="yes" if exist "*logo.png" (
 
 echo %TAB%%ESC%%g_%Logo        :%LogoName%%ESC%
 
-set CODE-LOGO-IMAGE= ( "%Logo%" ^
+set LAYER-LOGO-IMAGE= ( "%Logo%" ^
 	 -trim +repage ^
 	 -scale 167x60^ ^
 	 -background none ^
@@ -224,7 +223,7 @@ if exist "*clearart.png" (
 
 echo %TAB%%ESC%%g_%Clear Art   :%ClearArtName%%ESC%
 
-set CODE-CLEARART-IMAGE= ( "%clearart%" ^
+set LAYER-CLEARART-IMAGE= ( "%clearart%" ^
 	 -trim +repage ^
 	 -scale 380x ^
 	 -background none ^
@@ -239,7 +238,7 @@ exit /b
 
 :LAYER-FOLDER_NAME
 if /i "%display-FolderName%"=="no" exit /b
-if defined CODE-LOGO-IMAGE exit /b
+if defined LAYER-LOGO-IMAGE exit /b
 
 if /i not "%custom-FolderName%"=="yes" for %%F in ("%cd%") do set "foldername=%%~nxF"
 if not defined foldername set "foldername=%cd:\=\\            %"&set "FolderNameLong-characters-limit=0"
@@ -277,10 +276,10 @@ if not "%_FolNamLong%"=="%FolderName%" (
 set /A "FolNamLongLimiter=%FolNamLongLimit%-4"
 if %FolNamLongCount% GTR %FolNamLongLimit% call set "FolNamLong=%%FolderName:~0,%FolNamLongLimiter%%%..."
 
-set CODE-FOLDER-NAME-SHORT= ^
+set LAYER-FOLDER-NAME-SHORT= ^
 	 ( ^
 	 -font "%RCFI%\resources\BIG_NOODLE_TITLING.ttf" ^
-	 -fill rgba(255,255,255,0.9) ^
+	 -fill %FolderName-Font-Color% ^
 	 -density 400 ^
 	 -pointsize 7 ^
 	 -kerning 1.2 ^
@@ -294,10 +293,10 @@ set CODE-FOLDER-NAME-SHORT= ^
 	 -rotate 90 ) -composite
    
 if %FolNamShortCount% LEQ %FolNamShortLimit% exit /b
-set CODE-FOLDER-NAME-LONG= ^
+set LAYER-FOLDER-NAME-LONG= ^
 	 ( ^
 	 -font "%RCFI%\resources\BIG_NOODLE_TITLING.ttf"  ^
-	 -fill rgba(255,255,255,0.9) ^
+	 -fill %FolderName-Font-Color% ^
 	 -density 400 ^
 	 -pointsize 2.8 ^
 	 -kerning 2 ^
@@ -311,12 +310,12 @@ set CODE-FOLDER-NAME-LONG= ^
 	 ( +clone -background BLACK -shadow 0x5+0.2-0.2 ) +swap -background none -layers merge ^
 	 -rotate 90 ) -composite
 
-if "%FolderNameLong-characters-limit%"=="0" set "CODE-FOLDER-NAME-LONG="
+if "%FolderNameLong-characters-limit%"=="0" set "LAYER-FOLDER-NAME-LONG="
 exit /b
 
 
 :LAYER-TAB2
-set CODE-TAB2= ( ^
+set LAYER-TAB2= ( ^
 	 "%inputfile%" ^
 	 -resize 3x3! ^
 	 -resize 1000x1000! ^
@@ -326,12 +325,12 @@ set CODE-TAB2= ( ^
 	 -blur 0x50 ^
 	 "%DualTabV-tab2%" ) -compose over -composite
 	 
-set CODE-TAB2-FX= ( "%DualTabV-tab2fx%" -scale 512x512! ) -compose over -composite
+set LAYER-TAB2-FX= ( "%DualTabV-tab2fx%" -scale 512x512! ) -compose over -composite
 
 set tab2-label=%tab2-label:"=%
 set "Logo2="
 set "Logo2-Name="
-set "CODE-TAB2-LOGO="
+set "LAYER-TAB2-LOGO="
 
 if exist "%tab2-label%" for %%I in ("%tab2-label%") do (
 	for %%X in (%ImageSupport%) do if "%%X"=="%%~xI" (
@@ -340,7 +339,7 @@ if exist "%tab2-label%" for %%I in ("%tab2-label%") do (
 	)
 )
  
-if defined Logo2 set CODE-TAB2-LOGO= ^
+if defined Logo2 set LAYER-TAB2-LOGO= ^
     ( "%Logo2%" ^
 	 -trim +repage ^
 	 -scale 150x45^ ^
@@ -350,12 +349,12 @@ if defined Logo2 set CODE-TAB2-LOGO= ^
 	 -rotate 90 ^
 	 ) -compose Over -composite
 
-if defined CODE-TAB2-LOGO exit /b
+if defined LAYER-TAB2-LOGO exit /b
 
-set CODE-TAB2-LABEL= ^
+set LAYER-TAB2-LABEL= ^
    ( ^
 	 -font "%RCFI%\resources\BIG_NOODLE_TITLING.ttf" ^
-	 -fill rgba(255,255,255,1) ^
+	 -fill %FolderName-Font-Color% ^
 	 -density 400 ^
 	 -pointsize 5 ^
 	 -kerning 3 ^

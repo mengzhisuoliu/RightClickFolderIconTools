@@ -61,13 +61,13 @@ call :LAYER-BASE
 call :LAYER-RATING
 call :LAYER-GENRE
  "%Converter%"         ^
-  %CODE-BACKGROUND%    ^
-  %CODE-POSTER%        ^
-  %CODE-RATING-BG%     ^
-  %CODE-RATING%        ^
-  %CODE-GENRE-BG%      ^
-  %CODE-GENRE%         ^
-  %CODE-ICON-SIZE%     ^
+  %LAYER-BACKGROUND%    ^
+  %LAYER-POSTER%        ^
+  %LAYER-RATING-BG%     ^
+  %LAYER-RATING%        ^
+  %LAYER-GENRE-BG%      ^
+  %LAYER-GENRE%         ^
+  %LAYER-ICON-SIZE%     ^
  "%OutputFile%"
 endlocal
 exit /b
@@ -81,20 +81,20 @@ if /i "%use-GlobalConfig%"=="Yes" (
 	)
 )
 
-set CODE-BACKGROUND= ( "%canvas%" ^
+set LAYER-BACKGROUND= ( "%canvas%" ^
 	-scale 512x512! ^
 	-background none ^
 	-extent 512x512 ^
  ) -compose Over
 
-set CODE-POSTER= ( "%inputfile%" ^
+set LAYER-POSTER= ( "%inputfile%" ^
 	 -scale %poster-size%! ^
 	 -background none ^
 	 -gravity %poster-gravity% ^
 	 -geometry %poster-Y-position%%poster-X-position% ^
 	 "%Kometa-shape%" ) -compose Over -composite ^
 	 ( "%Kometa-shadow%" -scale 512x512! ) -compose over -composite
-set CODE-ICON-SIZE=-define icon:auto-resize="%TemplateIconSize%"
+set LAYER-ICON-SIZE=-define icon:auto-resize="%TemplateIconSize%"
 exit /b
 
 
@@ -103,14 +103,14 @@ if /i not "%display-movieinfo%" EQU "yes" exit /b
 if not exist "*.nfo" (exit /b) else call "%RCFI%\resources\extract-NFO.bat"
 if /i not "%Show-Rating%" EQU "yes" exit /b
 
-set CODE-RATING-BG= ( "%rating-background%" ^
+set LAYER-RATING-BG= ( "%rating-background%" ^
 	 -scale %BG-rating-size%! ^
 	 -gravity %BG-rating-gravity% ^
 	 -geometry %BG-rating-Y-position%%BG-rating-X-position% ^
 	 ) -compose Over -composite
 	 if not defined rating exit /b
 
-set CODE-RATING= ( ^
+set LAYER-RATING= ( ^
 	 -font %rating-font-style% ^
 	 -fill %rating-font-color% ^
 	 -density 400 ^
@@ -128,7 +128,7 @@ if /i not "%display-movieinfo%" EQU "yes" exit /b
 if /i not "%Show-Genre%" EQU "yes" exit /b
 if not defined GENRE exit /b
 
-set CODE-GENRE-BG= ( ^
+set LAYER-GENRE-BG= ( ^
 	 "%genre-background%" ^
 	 -scale %BG-genre-size%! ^
 	 -gravity %BG-genre-gravity% ^
@@ -136,7 +136,7 @@ set CODE-GENRE-BG= ( ^
 	 ) -compose Over -composite
 	 if not defined rating exit /b
 	 
-set CODE-GENRE= ( ^
+set LAYER-GENRE= ( ^
 	 -font %genre-font-style% ^
 	 -fill %genre-font-color% ^
 	 -density 400 ^
