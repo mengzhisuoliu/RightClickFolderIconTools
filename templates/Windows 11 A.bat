@@ -274,7 +274,7 @@ if /i not "%custom-FolderName-HaveTheLogo%"=="yes" if exist "*logo.png" (
 	for %%D in (*logo.png) do set "Logo=%%~fD"&set "LogoName=%%~nxD"
 ) else exit /b
 
-echo %TAB%%ESC%%g_%Logo        :%LogoName%%ESC%
+echo %TAB% %G_%Logo        :%ESC%%LogoName%%ESC%
 
 set LAYER-LOGO-IMAGE= ( "%Logo%" ^
 	 -trim +repage ^
@@ -292,7 +292,7 @@ if exist "*clearart.png" (
 	for %%D in (*clearart.png) do set "ClearArt=%%~fD"&set "ClearArtName=%%~nxD"
 ) else exit /b
 
-echo %TAB%%ESC%%g_%Clear Art   :%ClearArtName%%ESC%
+echo %TAB% %G_%Clear Art   :%ESC%%ClearArtName%%ESC%
 
 set LAYER-CLEARART-IMAGE= ( "%clearart%" ^
 	 -trim +repage ^

@@ -96,7 +96,7 @@ if exist "%discart-search%" (
 	for %%D in (%discart-search%) do (
 		set "DiscArt=%%~fD"
 		set "DiscArtName=%%~nxD"
-		echo %TAB%%ESC%%g_%Disc Art    :%%~nxD%ESC%%r_%
+		echo %TAB% %G_%Disc Art    :%ESC%%%~nxD%ESC%%r_%
 		goto Generate_DiscArt-done
 	)
 ) else if /i "%generate-discart%"=="yes" (
@@ -105,7 +105,7 @@ if exist "%discart-search%" (
 		for %%X in (%ImageSupport%) do (
 			if /i "%%X"=="%%~xG" (
 				set "gen_disc=%%~fG"
-				echo %TAB%%ESC%%g_%Disc Art    :%%~nxG%ESC%%r_%
+				echo %TAB% %G_%Disc Art    :%ESC%%%~nxG%ESC%%r_%
 				goto Generate_DiscArt-call
 			)
 		)

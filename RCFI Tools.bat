@@ -20,7 +20,11 @@
 :: 2024-12-18 Added: New template — "DualTab Vertical" (Requested in #17).
 :: 2024-12-24 Added: Option to customize the folder name on some templates.
 :: 2024-12-24 Rolled back: SingleInstanceAccumulator from v1.0.0.5 to v0.0.0.0, so users don't need to download and install Microsoft .NET 8.0.  
-:: 2024-12-25 Optimized: the logic for opening File selector.
+:: 2024-12-25 Improved: Optimized file selector logic.  
+:: 2024-12-27 Added: Auto-refresh folder after task completion.
+:: 2024-12-27 Fixed: "TemplateAlwaysAsk" activated every time a template was selected in 'Template Configurations'.
+:: 2024-12-27 Added: Option to toggle "TemplateAlwaysAsk" in 'Template Configurations'.
+:: 2024-12-28 Updated: Recompiled FolderIconUpdater.exe to include required redistributable libraries.  
 
 
 setlocal
@@ -31,6 +35,8 @@ PUSHD    "%~dp0"
 title %name%   "%cd%"
 
 :Start                            
+set "xSelectedCount=0"
+if defined xSelected for %%S in (%xSelected%) do set /a xSelectedCount+=1
 set "SelectedThing=%~f1"
 set "SelectedThingPath=%~dp1"
 
@@ -86,6 +92,7 @@ set "Converter=%RCFI%\resources\Convert.exe"
 set "montage=%RCFI%\resources\montage.exe"
 set "FI-Update=%RCFI%\resources\FolderIconUpdater.exe"
 set "ImageSupport=.jpg,.png,.ico,.webp,.wbmp,.bmp,.svg,.jpeg,.tiff,.heic,.heif,.tga"
+set "ImageFilter=*.jpg;*.png;*.ico;*.webp;*.wbmp;*.bmp;*.svg;*.jpeg;*.tiff;*.heic;*.heif;*.tga"
 set "TemplateSampleImage=%RCFI%\images\- test.jpg"
 set "RCFI.config.ini=%RCFI%\RCFI.config.ini"
 set "RCFI.templates.ini=%RCFI%\RCFI.templates.ini"
@@ -483,11 +490,14 @@ call :FI-Generate-Folder_Icon
 goto options
 
 :FI-File_Selector
-set "FolderCount="
-if defined xSelected for %%S in (%xSelected%) do PUSHD "%%~fS"&set /a FolderCount+=1
+set "FS-BackToBackup="
 set "FileSelectorPathBackup=%FileSelectorPath%"
-if not exist "%FileSelectorPath%" set "FileSelectorPath=%cd%"
-if %FolderCount% EQU 1 set "FileSelectorPath=%cd%"&set "FS-BackToBackup=yes"
+if not exist "%FileSelectorPath%" set "FileSelectorPath=D:\"
+
+rem due to xSelected quote stipped in Selected Folder when FolderCount is 1
+if %xSelectedCount% EQU 1 if defined FolderCount PUSHD   "%xSelected%"
+if %xSelectedCount% EQU 1 if not defined FolderCount PUSHD   %xSelected%
+if %xSelectedCount% EQU 1 (set "FileSelectorPath=%cd%"&set "FS-BackToBackup=yes")
 
 if exist "%FileSelector-defaultPath%" (
 	set "FileSelector-InitialPath=%FileSelector-defaultPath%"
@@ -497,21 +507,21 @@ if exist "%FileSelector-defaultPath%" (
 
 if /i "%InitDir%"=="collect" (
 	set "initialDirectory=%CollectionsFolder%"
+	set "FS-BackToBackup=yes"
 ) else (
 	set "initialDirectory=%FileSelector-InitialPath%"
 )
 
 set "SaveSelectedFile=%RCFI%\resources\selected_file.txt"
-for /f "tokens=1-12 delims=," %%A in ("%ImageSupport%") do (
-    set fileFilter=*%%A;*%%B;*%%C;*%%D;*%%E;*%%F;*%%G;*%%H;*%%I;*%%J;*%%K;*%%L
-)
-set "fileFilter=Image Files (*.jpg, *.png, *.ico, ...)|%fileFilter%"
+set "fileFilter=Image Files (*.jpg, *.png, *.ico, ...)|%ImageFilter%"
 set "OpenFileSelector=Add-Type -AssemblyName System.Windows.Forms; $f = New-Object System.Windows.Forms.OpenFileDialog; $f.InitialDirectory = '%initialDirectory%'; $fileDialog.RestoreDirectory = $true; $f.Filter = '%fileFilter%'; $f.ShowDialog() | Out-Null; $f.FileName; exit"
+
 if /i not "%FS-referer%"=="cmd" (
 echo.&echo.&echo.&echo.&echo.&echo.&echo.&echo.&echo.&echo.
 echo                     %I_%%G_%     Select a file from the file selection dialog     %_%
 )
-start /MIN /WAIT "" "%RCFI%\resources\File_Selector.bat"
+
+start /MIN /WAIT "Select file" "%RCFI%\resources\File_Selector.bat"
 
 if exist "%SaveSelectedFile%" (
     for /f "usebackq tokens=* delims=" %%F in ("%SaveSelectedFile%") do (
@@ -521,9 +531,8 @@ if exist "%SaveSelectedFile%" (
     del /q "%SaveSelectedFile%" >nul
 )
 if /i "%SelectorSelectedFile%"==" " echo %TAB%  %I_%%G_%  No file selected  %_%&echo.&echo.
-if /i "%FS-BackToBackup%"=="yes" set "FileSelectorPath=%FileSelectorPathBackup%"&set "FS-BackToBackup="
-if exist "%FileSelectorPath%" if /i not "%FileSelectorPath%"=="%CollectionsFolder%\" call :Config-Save
-if not exist "%SelectorSelectedFile%" set "SelectorSelectedFile="
+if not exist "%SelectorSelectedFile%" (set "SelectorSelectedFile="&set "FS-BackToBackup=yes")
+call :Config-Save
 
 if /i "%FS-referer%"=="Change.Folder.Icon" (
 	if not defined SelectorSelectedFile cls
@@ -600,8 +609,8 @@ if not exist "%input%" (
 )
 set "Input=%Input:"=%"
 if /i "%input%"=="1" goto FI-Selected_folder-Separate
-if /i "%input%"=="o" cls&set "context=Select.And.Change.Folder.Icon"&goto Input-Context
-if /i "%input%"=="c" cls&set "context=Choose.from.collections"&goto Input-Context
+if /i "%input%"=="o" set "context=Select.And.Change.Folder.Icon"&goto Input-Context
+if /i "%input%"=="c" set "context=Choose.from.collections"&goto Input-Context
 echo.
 if not exist "%Input%" (
 	echo.
@@ -1042,7 +1051,7 @@ goto options
 
 :FI-Generate-Folder_Icon          
 set /a GeneratingCount+=1
-title (%GeneratingCount%) "%FolderName%" ^| Generating folder icon ...
+title [%GeneratingCount%] "%FolderName%" ^| Generating folder icon ...
 if defined Selected EXIT /B
 
 Attrib -r "%CD%"
@@ -1161,7 +1170,7 @@ if exist "desktop.ini" if exist "%FolderIconName.ico%" (
 	echo "%CD%" >>"%RCFI%\resources\FolderUpdater_list.txt"
 )
 
-title %name% %version% ^| (%GeneratingCount%) Folders processed. ^| "%SelectedThing%"
+title %name% %version% ^| [%GeneratingCount%] Folders processed. ^| "%SelectedThing%"
 EXIT /B
 
 :FI-Generate-Get_Template         
@@ -1251,7 +1260,9 @@ for %%I in ("%TemplateSampleImage%") do (
 	)
 if /i "%context%"=="Edit.Template" (
 	echo.
-	echo %TAB%%GN_% G%_% %W_%Global Template Configuration%_%
+	if /i "%TemplateAlwaysAsk%"=="yes" echo %TAB%  %GN_% A%_% %W_%Deactivate Always ask template%_%
+	if /i not "%TemplateAlwaysAsk%"=="yes" echo %TAB%  %GN_% A%_% %W_%Activate Always ask template%_%
+	echo %TAB%  %GN_% G%_% %W_%Global Template Configuration%_%
 )
 echo.
 echo %G_%%TAB%  to select, insert the number assosiated to the options, then hit Enter.%_%
@@ -1261,6 +1272,7 @@ call :Config-Save
 echo.
 echo.
 set "Already=Asked"
+call :timer-start
 EXIT /B
 
 :FI-Template                      
@@ -1342,13 +1354,20 @@ goto options
 rem Input template options
 set "TemplateChoice=NotSelected"
 set /p "TemplateChoice=%_%%TAB%  %G_%%I_%Select option:%_% %GN_%"
-if /i "%TemplateChoice%"=="NotSelected" echo.&echo %_%%TAB%   %I_%  CANCELED  %-%&%p2%&goto options
+if /i "%TemplateChoice%"=="NotSelected" (
+	echo.
+	echo %_%%TAB%   %I_%  CANCELED  %-%
+	%p2%
+	set "timestart="
+	goto options
+)
 if /i "%TemplateChoice%"=="R" cls&echo.&echo.&echo.&goto FI-Template
 if /i "%TemplateChoice%"=="A" (
 	if /i    "%TemplateAlwaysAsk%"=="yes" set "TemplateAlwaysAsk=no"
 	if /i not "%TemplateAlwaysAsk%"=="yes" set "TemplateAlwaysAsk=yes"
 	call :Config-Save
 	cls
+	if /i "%context%"=="Edit.Template" goto start
 	goto FI-Template
 )
 if /i "%TemplateChoice%"=="G" start "" "%TextEditor%" "%RCFI%\RCFI.Templates.ini"&EXIT
@@ -1663,7 +1682,6 @@ goto FI-Template-TestMode-Auto
 echo            %I_%%W_%  Template Configuration  %_%
 echo.
 echo %TAB% %W_%Choose Template:%_%
-set "TemplateAlwaysAsk=yes"
 call :FI-Template-AlwaysAsk
 start "" "%TextEditor%" "%Template%"
 exit
@@ -2864,14 +2882,14 @@ echo %TAB%%CC_%Restarting Explorer and updating icon cache ..%R_%
 echo.&set "startexplorer="
 set Context=&Set Setup=
 taskkill /F /IM explorer.exe >nul ||echo 	echo %I_%%R_% Failed to Terminate "Explorer.exe" %_%
-ie4uinit.exe -ClearIconCache
 PUSHD "%userprofile%\AppData\Local\Microsoft\Windows\Explorer"
 if exist "iconcache_*.db" attrib -h iconcache_*.db
 if exist "%localappdata%\IconCache.db" DEL /A /Q "%localappdata%\IconCache.db"
 if exist "%localappdata%\Microsoft\Windows\Explorer\iconcache*" DEL /A /F /Q "%localappdata%\Microsoft\Windows\Explorer\iconcache*"
-ie4uinit.exe -show
 set "startexplorer="&start explorer.exe ||set "startexplorer=fail"
 POPD
+ie4uinit.exe -ClearIconCache
+ie4uinit.exe -show
 if "%startexplorer%"=="fail" (
 	echo.
 	echo %I_%%R_%  Failed to start "Explorer.exe"  %_%
@@ -2949,12 +2967,8 @@ ping localhost -n 2 >nul
 EXIT
 
 :FI-Updater
-for /l %%N in (1,1,1) do (
-	for /f "usebackq tokens=* delims=" %%F in ("%RCFI%\resources\FolderUpdater_list.txt") do (
-		call "%FI-Update%" /f %%F >nul 2>&1 &call |EXIT /B
-	)
-)
-del /q "%RCFI%\resources\FolderUpdater_list.txt"
+set "FI-UpdateList=%RCFI%\resources\FolderUpdater_list.txt"
+start /MIN "Updating Folder Info .." "%RCFI%\resources\refresh_folder.bat"
 EXIT /B
 
 :IMG-Add_to_collections
@@ -3621,6 +3635,7 @@ if not exist "%FileSelector-defaultPath%" (
 
 call set "FileSelectorPathIsCollections=%%FileSelectorPath:%CollectionsFolder%=%%"
 if /i not "%FileSelectorPathIsCollections%"=="%FileSelectorPath%" set "FileSelectorPath=%FileSelectorPathBackup%"
+if /i "%FS-BackToBackup%"=="yes" set "FileSelectorPath=%FileSelectorPathBackup%"
 
 if not defined TemplateIconSize set "TemplateIconSize=Auto"
 rem prevent current keywords replaced by intstant keywords.
@@ -3844,18 +3859,19 @@ PUSHD "%~dp0"
 (
     echo     𝐆𝐋𝐎𝐁𝐀𝐋 𝐓𝐄𝐌𝐏𝐋𝐀𝐓𝐄 𝐂𝐎𝐍𝐅𝐈𝐆𝐔𝐑𝐀𝐓𝐈𝐎𝐍
     echo This configuration will override individual template settings for all templates.
-    echo - You can add any configuration option from any template here.
+    echo - You can add any configuration options from any template here.
     echo - Options with no value ^(empty/blank^) will be ignored.
     echo.
     echo.
-    echo set "custom-FolderName="
     echo set "display-FolderName="
-    echo set "use-Logo-instead-of-FolderName="
     echo set "FolderNameShort-characters-limit="
     echo set "FolderNameLong-characters-limit="
     echo set "FolderName-Center="
-    echo set "display-clearArt="
     echo.
+    echo set "custom-FolderName="
+    echo.
+    echo set "use-Logo-instead-of-FolderName="
+    echo set "display-clearArt="
     echo set "display-movieinfo="
     echo set "show-Rating="
     echo set "show-Genre="

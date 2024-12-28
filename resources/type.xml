@@ -18,5 +18,4 @@
 ]>
 <typemap>
    <include file="type-ghostscript.xml"/>
-   <include file="~/.magick/type.xml" />
 </typemap>

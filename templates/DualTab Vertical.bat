@@ -131,8 +131,8 @@ set LAYER-TAB1= ( ^
 	 -resize 3x3! ^
 	 -resize 1000x1000! ^
 	 -scale 512x512! ^
-	 -modulate 100,150 ^
-	 -brightness-contrast 15x30 ^
+	 -modulate 100,130 ^
+	 -brightness-contrast 8x13 ^
 	 -blur 0x50 ^
 	 "%DualTabV-tab1%" ) -compose over -composite
 set LAYER-TAB1-FX= ( "%DualTabV-tab1fx%" -scale 512x512! ) -compose over -composite
@@ -202,7 +202,7 @@ if /i not "%custom-FolderName-HaveTheLogo%"=="yes" if exist "*logo.png" (
 	for %%D in (*logo.png) do set "Logo=%%~fD"&set "LogoName=%%~nxD"
 ) else exit /b
 
-echo %TAB%%ESC%%g_%Logo        :%LogoName%%ESC%
+echo %TAB% %G_%Logo        :%ESC%%LogoName%%ESC%
 
 set LAYER-LOGO-IMAGE= ( "%Logo%" ^
 	 -trim +repage ^
@@ -221,7 +221,7 @@ if exist "*clearart.png" (
 	for %%D in (*clearart.png) do set "ClearArt=%%~fD"&set "ClearArtName=%%~nxD"
 ) else exit /b
 
-echo %TAB%%ESC%%g_%Clear Art   :%ClearArtName%%ESC%
+echo %TAB% %G_%Clear Art   :%ESC%%ClearArtName%%ESC%
 
 set LAYER-CLEARART-IMAGE= ( "%clearart%" ^
 	 -trim +repage ^
@@ -320,8 +320,8 @@ set LAYER-TAB2= ( ^
 	 -resize 3x3! ^
 	 -resize 1000x1000! ^
 	 -scale 512x512! ^
-	 -modulate 100,150 ^
-	 -brightness-contrast 15x30 ^
+	 -modulate 100,130 ^
+	 -brightness-contrast 8x13 ^
 	 -blur 0x50 ^
 	 "%DualTabV-tab2%" ) -compose over -composite
 	 

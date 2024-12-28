@@ -1,3 +1,4 @@
+@echo off
 mode con: cols=37 lines=3
 echo.
 echo  %I_%%CC_% Opening file selection dialog... %_%

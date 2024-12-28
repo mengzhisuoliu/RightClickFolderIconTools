@@ -1,6 +1,6 @@
 for %%N in (*.nfo) do (
 	set "nfoName=%%~nxN"
-	echo %TAB%%ESC%%g_%Movie info  :%%~nxN%ESC%
+	echo %TAB% %g_%Movie info  :%ESC%%%~nxN%ESC%
 	for /f "usebackq tokens=1,2,3,4 delims=<>" %%C in ("%%N") do (
 		if /i not "%%D"=="" (
 			if /i "%%D"=="value" (set "%%D=%%E"&call :GetInfo-Rating) else set parameter=%%D
@@ -15,19 +15,19 @@ for %%N in (*.nfo) do (
 if /i "%preferred-rating%"=="imdb" (
 	if defined imdb-rating (
 		set "value=%imdb-rating%"
-	) else  echo %TAB%%G_% Rating name :IMDB, is not provided in "%nfoName%"%r_%
+	) else  echo %TAB%%G_% Rating name : %_%IMDB, is not provided in "%nfoName%"%r_%
 )
 
 if /i "%preferred-rating%"=="tmdb" (
 	if defined themoviedb-rating (
 		set "value=%themoviedb-rating%"
-	) else echo %TAB%%G_% Rating name :TMDB, is not provided in "%nfoName%"%r_%
+	) else echo %TAB%%G_% Rating name : %_%TMDB, is not provided in "%nfoName%"%r_%
 )
 
 if /i "%preferred-rating%"=="tvdb" (
 	if defined tvdb-rating (
 		set "value=%tvdb-rating%"
-	) else echo %TAB%%G_% Rating name :TVDB, is not provided in "%nfoName%"%r_%
+	) else echo %TAB%%G_% Rating name : %_%TVDB, is not provided in "%nfoName%"%r_%
 )
 
 if not defined value if defined userrating if not "%userrating%"=="0" set "value=%userrating%"
