@@ -32,7 +32,7 @@ if /i "%InputFolderName%"=="c" set "InitDir=%CollectionsFolder%"&call :fileselec
 if /i "%InputFolderName%"=="f" set "InitDir=%CollectionsFolder%"&goto colorpickers
 
 if /i "%InputFolderName%"=="_0" (
-	echo    %G_%%I_% Skipped %_%
+	echo   %ESC%%YY_%%Foldername%%ESC%%_%
 	echo set "custom-FolderName=No">>"%cfn1%"
 	goto exit
 )
@@ -68,7 +68,7 @@ for /f "tokens=1-12 delims=," %%A in ("%ImageSupport%") do (
 set "fileFilter=Image Files (*.jpg, *.png, *.ico, ...)|%fileFilter%"
 set "OpenFileSelector=Add-Type -AssemblyName System.Windows.Forms; $f = New-Object System.Windows.Forms.OpenFileDialog; $f.InitialDirectory = '%InitDir%'; $fileDialog.RestoreDirectory = $true; $f.Filter = '%fileFilter%'; $f.ShowDialog() | Out-Null; $f.FileName; exit"
 
-start /WAIT "" "%RCFI%\resources\File_Selector.bat"
+start /MIN /WAIT "" "%RCFI%\resources\File_Selector.bat"
 
 for /f "usebackq tokens=* delims=" %%F in ("%SaveSelectedFile%") do set "SelectedFile=%%~fF"&set "FileName=%%~nxF"
 del /q "%SaveSelectedFile%" >nul
@@ -101,6 +101,7 @@ echo %W_% ► %G_%Enter the second folder name, or leave it empty to skip:
 set /p "InputFolderName2=%W_%  %_%%C_% "
 if /i "%InputFolderName2%"=="o" set "InitDir=%cd%"&call :fileselector
 if /i "%InputFolderName2%"=="c" set "InitDir=%CollectionsFolder%"&call :fileselector
+if /i "%InputFolderName2%"=="f" set "InitDir=%CollectionsFolder%"&goto colorpickers
 type nul "%cfn2%"
 set InputFolderName2=%InputFolderName2:"=%
 if defined InputFolderName2 echo "%InputFolderName2%">>"%cfn2%"

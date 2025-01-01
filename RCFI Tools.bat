@@ -24,8 +24,8 @@
 :: 2024-12-27 Added: Auto-refresh folder after task completion.
 :: 2024-12-27 Fixed: "TemplateAlwaysAsk" activated every time a template was selected in 'Template Configurations'.
 :: 2024-12-27 Added: Option to toggle "TemplateAlwaysAsk" in 'Template Configurations'.
-:: 2024-12-28 Updated: Recompiled FolderIconUpdater.exe to include required redistributable libraries.  
-
+:: 2024-12-28 Updated: Recompiled FolderIconUpdater.exe to include required libraries.
+:: 2025-01-01 Happy New Year! 🎉 
 
 setlocal
 set name=RCFI Tools
@@ -163,7 +163,7 @@ echo %TAB%     %PP_%Drag and  drop%_%%G_% an %C_%image%G_% into  this  window,
 echo %TAB%     then press Enter to change the folder icon.
 echo.
 echo.
-echo "%C_%O%G_%" to open file selection dialog.  "%C_%C%G_%" to open Collections folder.
+echo  %C_%O%G_% to open file selection dialog.  %C_%C%G_% to open Collections folder.
 )
 goto Options-Input
 
@@ -514,7 +514,7 @@ if /i "%InitDir%"=="collect" (
 
 set "SaveSelectedFile=%RCFI%\resources\selected_file.txt"
 set "fileFilter=Image Files (*.jpg, *.png, *.ico, ...)|%ImageFilter%"
-set "OpenFileSelector=Add-Type -AssemblyName System.Windows.Forms; $f = New-Object System.Windows.Forms.OpenFileDialog; $f.InitialDirectory = '%initialDirectory%'; $fileDialog.RestoreDirectory = $true; $f.Filter = '%fileFilter%'; $f.ShowDialog() | Out-Null; $f.FileName; exit"
+set "OpenFileSelector=Add-Type -AssemblyName System.Windows.Forms; $f = New-Object System.Windows.Forms.OpenFileDialog; $f.InitialDirectory = '%initialDirectory%'; $fileDialog.RestoreDirectory = $true; $f.Multiselect = $true; $f.Filter = '%fileFilter%'; $f.ShowDialog() | Out-Null; $f.FileName; exit"
 
 if /i not "%FS-referer%"=="cmd" (
 echo.&echo.&echo.&echo.&echo.&echo.&echo.&echo.&echo.&echo.
@@ -1283,7 +1283,7 @@ echo                  %W_%%I_%     T E M P L A T E     %_%
 if /i not	"%referer%"=="FI-Generate" (
 	if /i "%TemplateAlwaysAsk%"=="yes" (
 		echo.
-		echo %CC_%%I_% %_% %W_%TemplateAlwaysAsk %G_%is %R_%active%G_%
+		echo %CC_%%I_% %_% %W_%TemplateAlwaysAsk %G_%is %GG_%active%G_%
 		echo   choosing any template will be redirected to Test Mode.
 	)
 )
@@ -1720,7 +1720,7 @@ if not "%SrcInput%"=="%SrcInput: icon=%" set "SrcInput=%SrcInput:icon=%"&set "Pr
 if not "%SrcInput%"=="%SrcInput: logo=%" set "SrcInput=%SrcInput:logo=%"&set "PreAppliedKeyword=%PreAppliedKeywordLogo%"
 
 Start "" "https://google.com/search?q=%SrcInput% %PreAppliedKeyword%"
-cls
+cls&echo.&echo.&echo.
 if /i not "%Context%"=="" exit
 goto FI-Search
 
@@ -3013,6 +3013,12 @@ echo %TAB%%G_%--------------------------------------------------
 echo %TAB%%W_%Location:%ESC%%_%%CollectionsFolder%%ESC%
 echo.
 echo %TAB% %W_%(%C_%%CollectAddSuccess%%W_%)%_% Items added to collections.
+echo.&echo.&echo.
+echo %TAB%%G_%Press %YY_%O%G_% to open Collections folder.  ^|  %G_%Press %R_%X%G_% to close this window.%BK_%
+choice /C:ox /N
+set "ExitPause=%errorlevel%"
+if /i "%ExitPause%"=="1" explorer.exe "%CollectionsFolder%"&EXIT
+if /i "%ExitPause%"=="2" EXIT
 goto options
 
 :IMG-Add_to_collections-UnsupportedFileType
@@ -3023,7 +3029,7 @@ EXIT /B
 :IMG-Add_to_collections-DuplicateChecks
 for %%D in ("%CollectionsFolder%\%FileName%%FileType%") do (
 	if "%FileSize%"=="%%~zD" (
-		echo %TAB%%C_%🏞%ESC%%G_%%%~nxI%ESC% %G_%Already exist.%_%
+		echo %TAB%%C_%🏞%ESC%%G_%%%~nxI%ESC% %GG_%Already exist.%_%
 		EXIT /B
 	) else (
 		set "RenDupCount=0"
@@ -3935,7 +3941,7 @@ if /i "%setup_select%"=="2" (
 	echo %G_%Folder Icon Tools have been removed from the right-click menus.%_%
 if /i "%Setup%"=="Deactivate" set "Setup=Deactivated"
 )
-if /i "%Setup%"=="Deactivated" %p5%&%p3%&exit
+if /i "%Setup%"=="Deactivated" echo.&echo Press any key to close . . .&pause>nul&exit
 goto options
 
 :Setup_error                      

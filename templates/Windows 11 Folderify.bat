@@ -380,10 +380,10 @@ set LAYER-FOLDER-NAME-SHORT= ^
 	 %FolNamPos% ^
 	 -background none ^
 	 label:"%FolNamShort%" ^
-	 ( +clone -background BLACK -shadow 6x1+0.3+0.3 ) +swap -background none -layers merge ^
-	 ( +clone -background BLACK -shadow 6x1-0.3-0.3 ) +swap -background none -layers merge ^
-	 ( +clone -background BLACK -shadow 6x1-0.3+0.3 ) +swap -background none -layers merge ^
-	 ( +clone -background BLACK -shadow 6x1+0.3-0.3 ) +swap -background none -layers merge ^
+	 ( +clone -background BLACK -shadow 0x1+0.3+0.3 ) +swap -background none -layers merge ^
+	 ( +clone -background BLACK -shadow 0x1-0.3-0.3 ) +swap -background none -layers merge ^
+	 ( +clone -background BLACK -shadow 0x1-0.3+0.3 ) +swap -background none -layers merge ^
+	 ( +clone -background BLACK -shadow 0x1+0.3-0.3 ) +swap -background none -layers merge ^
 	 ) -composite
 
 if %FolNamShortCount% LEQ %FolNamShortLimit% exit /b
@@ -398,10 +398,10 @@ set LAYER-FOLDER-NAME-LONG= ^
 	 -gravity %FolderNameLong-Pos-Gravity% ^
 	 -geometry %FolderNameLong-Pos-X%%FolderNameLong-Pos-Y% ^
 	 label:"%FolNamLong%" ^
-	 ( +clone -background BLACK -shadow 3x4.5+0.2+0.2 ) +swap -background none -layers merge ^
-	 ( +clone -background BLACK -shadow 3x4.5-0.2-0.2 ) +swap -background none -layers merge ^
-	 ( +clone -background BLACK -shadow 3x4.5-0.2+0.2 ) +swap -background none -layers merge ^
-	 ( +clone -background BLACK -shadow 3x4.5+0.2-0.2 ) +swap -background none -layers merge ^
+	 ( +clone -background BLACK -shadow 0x4.5+0.2+0.2 ) +swap -background none -layers merge ^
+	 ( +clone -background BLACK -shadow 0x4.5-0.2-0.2 ) +swap -background none -layers merge ^
+	 ( +clone -background BLACK -shadow 0x4.5-0.2+0.2 ) +swap -background none -layers merge ^
+	 ( +clone -background BLACK -shadow 0x4.5+0.2-0.2 ) +swap -background none -layers merge ^
 	 ) -composite
 
 if "%FolderNameLong-characters-limit%"=="0" set "LAYER-FOLDER-NAME-LONG="

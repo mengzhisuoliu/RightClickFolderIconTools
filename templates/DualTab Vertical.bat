@@ -286,10 +286,10 @@ set LAYER-FOLDER-NAME-SHORT= ^
 	 %FolNamPos% ^
 	 -background none ^
 	 label:"%FolNamShort%" ^
-	 ( +clone -background BLACK -shadow 10x2+0.6+0.6 ) +swap -background none -layers merge ^
-	 ( +clone -background BLACK -shadow 10x2-0.6-0.6 ) +swap -background none -layers merge ^
-	 ( +clone -background BLACK -shadow 10x2-0.6+0.6 ) +swap -background none -layers merge ^
-	 ( +clone -background BLACK -shadow 10x2+0.6-0.6 ) +swap -background none -layers merge ^
+	 ( +clone -background BLACK -shadow 00x2+0.6+0.6 ) +swap -background none -layers merge ^
+	 ( +clone -background BLACK -shadow 00x2-0.6-0.6 ) +swap -background none -layers merge ^
+	 ( +clone -background BLACK -shadow 00x2-0.6+0.6 ) +swap -background none -layers merge ^
+	 ( +clone -background BLACK -shadow 00x2+0.6-0.6 ) +swap -background none -layers merge ^
 	 -rotate 90 ) -composite
    
 if %FolNamShortCount% LEQ %FolNamShortLimit% exit /b
@@ -362,10 +362,10 @@ set LAYER-TAB2-LABEL= ^
 	 -geometry +207+88 ^
 	 -background none ^
 	 label:"%tab2-label%" ^
-	 ( +clone -background BLACK -shadow 07x7.0+0.1-0.1 ) +swap -background none -layers merge ^
-	 ( +clone -background BLACK -shadow 07x7.0-0.1-0.1 ) +swap -background none -layers merge ^
-	 ( +clone -background BLACK -shadow 07x7.0-0.1+0.1 ) +swap -background none -layers merge ^
-	 ( +clone -background BLACK -shadow 07x7.0+0.1-0.1 ) +swap -background none -layers merge ^
+	 ( +clone -background BLACK -shadow 00x7.0+0.1-0.1 ) +swap -background none -layers merge ^
+	 ( +clone -background BLACK -shadow 00x7.0-0.1-0.1 ) +swap -background none -layers merge ^
+	 ( +clone -background BLACK -shadow 00x7.0-0.1+0.1 ) +swap -background none -layers merge ^
+	 ( +clone -background BLACK -shadow 00x7.0+0.1-0.1 ) +swap -background none -layers merge ^
 	 -rotate 90 ) -composite
 exit /b
 
